@@ -1,0 +1,300 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f1f1f1;
+}
+
+.grades-container, .assignments-container {
+    margin-top: 80px;
+}
+
+.profile-pic-container {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-pic {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+.profile-pic-container:hover .profile-pic {
+    opacity: 0.7;
+}
+
+.dropdown {
+    display: none;
+    position: absolute;
+    top: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    width: 150px;
+    text-align: center;
+}
+
+.profile-pic-container:hover .dropdown {
+    display: block;
+}
+
+.dropdown-content p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.dropdown-content p strong {
+    color: #333;
+}
+
+
+
+.logOut-btn {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.logOut-btn:hover {
+    background-color: #d32f2f;
+    transform: scale(1.05);
+}
+
+.logOut-btn:focus {
+    outline: none;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 30px;
+    background-color: #00bcd4;
+    color: #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+}
+
+.logo {
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: #ffe437;
+    letter-spacing: 1px;
+}
+
+.nav-buttons {
+    display: flex;
+    gap: 25px;
+}
+
+.nav-btn {
+    padding: 10px 20px;
+    font-size: 1rem;
+    background: transparent;
+    color: #fff;
+    border: 2px solid #ffe437;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.nav-btn:hover {
+    background-color: #ffe437;
+    color: #00bcd4;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.profile-btn {
+    padding: 10px 20px;
+    font-size: 1rem;
+    background: linear-gradient(to right, #aeef63, #3ee345);
+    color: #fff;
+    border: 3px solid #63fb2e;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.profile-btn:hover {
+    background: linear-gradient(to right, #edd436, #c0f421);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.profile-pic {
+    width: 50px;
+    height: 50px;
+    background-color: #ccc;
+    border-radius: 50%;
+    background-image: url('https://via.placeholder.com/150');
+    background-size: cover;
+    background-position: center;
+}
+
+.card {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin: 20px 0;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.card h3 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #4a90e2;
+    margin-bottom: 10px;
+}
+
+.card p {
+    font-size: 1rem;
+    color: #555;
+    margin: 5px 0;
+}
+
+.card .duration {
+    font-size: 14px;
+    font-weight: bold;
+    color: #ff5722;
+    margin-top: 10px;
+}
+
+.card .card-content {
+    background-color: #f1f8ff;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+.card .deadline {
+    font-size: 16px;
+    color: #388e3c;
+    font-weight: bold;
+    background-color: #c8e6c9;
+    padding: 5px 10px;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+.card .expired {
+    font-size: 16px;
+    color: #f44336;
+    font-weight: bold;
+    background-color: #ffebee;
+    padding: 5px 10px;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+.card .card-title {
+    font-size: 18px;
+    color: #009688;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+
+.grades-container {
+    text-align: center;
+    padding: 40px;
+    margin-top: 100px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.grades-container h2 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #333;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.grades-table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    background-color: #fafafa;
+    border-radius: 8px;
+}
+
+table th, table td {
+    padding: 15px 20px;
+    text-align: center;
+    border: 1px solid #ddd;
+    font-size: 1.1rem;
+}
+
+table th {
+    background-color: #4caf50;
+    color: white;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+table td {
+    background-color: #ffffff;
+    color: #555;
+}
+
+table tr:nth-child(even) {
+    background-color: #f4f4f4;
+}
+
+table tr:hover {
+    background-color: #e0f7fa;
+}
+
+@media (max-width: 768px) {
+    .grades-container {
+        padding: 20px;
+        margin-top: 80px;
+    }
+
+    table th, table td {
+        font-size: 0.9rem;
+        padding: 10px;
+    }
+}

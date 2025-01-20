@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Page</title>
+  <link rel="stylesheet" href="/css/teacherpagestyle.css">
+  <script src="/js/teacherpageanimations.js"></script>
+</head>
+<body>
+<header class="header">
+  <div class="logo">MyLogo</div>
+  <nav class="nav-buttons">
+  </nav>
+  <div class="profile">
+    <form action="/logout" method="get">
+      <button class="nav-btn">Log Out</button>
+    </form>
+    <a href="https://chatgpt.com/" target="_blank"><button class="profile-btn">AI Assistance</button></a>
+  </div>
+</header>
+
+<div class="table-container" id="studentsTable" style="display: block;">
+  <h2>Students</h2>
+
+  <div class="groups-container">
+    <form action="/teacher" method="get">
+      <input type="submit" value="All" class="group-button">
+
+    </form>
+    <form action="/teacher/group" method="get" th:each="group:${session.allGroups}">
+      <input type="hidden" name="filterGroup" th:value="${group.groupNumber}">
+      <input type="submit" th:value="${group.groupNumber}" class="group-button">
+    </form>
+  </div>
+
+  <table>
+    <thead>
+    <tr>
+      <th>Image</th>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Surname</th>
+      <th>Group</th>
+      <th>Email</th>
+      <th>Math</th>
+      <th>English</th>
+      <th>Java</th>
+      <th>Update</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="st : ${session.subjects}">
+      <td><img th:src="@{'/images/' + ${st.student.image}}"></td>
+      <td th:text="${st.student.id}"></td>
+      <td th:text="${st.student.name}"></td>
+      <td th:text="${st.student.surname}"></td>
+      <td th:text="${st.student.groupInfo.groupNumber}"></td>
+      <td th:text="${st.student.email}"></td>
+
+      <form action="/update" method="post">
+        <td>
+          <input type="text" name="mathValue" th:readonly="${session.subject != null && !session.subject.equals('math') ? 'true' : 'false'}" th:value="${st.math}" />
+        </td>
+        <td>
+          <input type="text" name="englishValue" th:readonly="${session.subject != null && !session.subject.equals('english') ? 'true' : 'false'}" th:value="${st.english}" />
+        </td>
+        <td>
+          <input type="text" name="javaValue" th:readonly="${session.subject != null && !session.subject.equals('java') ? 'true' : 'false'}" th:value="${st.java}" />
+        </td>
+
+        <td>
+          <div class="action-buttons">
+            <input type="hidden" name="studentId" th:value="${st.student.id}">
+            <button type="submit" class="action-button update-button">Update</button>
+          </div>
+        </td>
+      </form>
+    </tr>
+    </tbody>
+  </table>
+
+  <form action="/teacher/new/homework" method="get">
+
+    <button class="homework">Add Homework</button>
+  </form>
+</div>
+</body>
+</html>

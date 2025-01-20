@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/css/addhomework.css">
+  <title>New Homework</title>
+</head>
+<body>
+<form action="/main" method="Post">
+<button type="submit" class="button back-button">Go Back</button>
+</form>
+<div class="main">
+  <h1>New Homework</h1>
+  <form class="form" action="/addHomework" method="Post">
+    <input type="text" name="groupNumber" placeholder="Enter the group number" aria-label="Group number">
+    <textarea name="title" placeholder="Enter the homework description" aria-label="Homework description"></textarea>
+    <button  type="submit" class="button">Add Homework</button>
+  </form>
+</div>
+
+<script>
+  function submitIt(){
+    alert("function is not working yet");
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Page</title>
+    <link rel="stylesheet" href="/css/studentCss.css">
+</head>
+<body>
+<header class="header">
+    <div class="logo">MyLogo</div>
+    <nav class="nav-buttons">
+        <button onclick="showGrades()" class="nav-btn">Grades</button>
+        <button onclick="showAssignments()" class="nav-btn">Assignments</button>
+        <form action="/faq" method="post">
+        <button type="submit" class="nav-btn">Wanted Questions</button>
+        </form>
+        <form action="/feedback" method="get">
+        <button type="submit" class="nav-btn">Feedback</button>
+        </form>
+    </nav>
+    <div class="profile">
+        <div class="profile-pic-container">
+            <img class="profile-pic" th:src="@{'/images/' + ${session.student.image}}" alt="Student Image">
+            <div class="dropdown">
+                <div class="dropdown-content">
+                    <p style="color:black" th:text="'Name: ' + ${session.student.name} + ' ' + ${session.student.surname}"></p>
+                    <p style="color:black" th:text="'Group: ' + ${session.student.groupInfo.groupNumber}"></p>
+                </div>
+            </div>
+        </div>
+        <a href="https://chatgpt.com/" target="_blank"><button class="profile-btn">AI Assistance</button></a>
+        <form action="/logout" method="get">
+            <button class="logOut-btn">Log Out</button>
+        </form>
+    </div>
+</header>
+
+<div id="gradesContainer" class="grades-container" style="display: block;">
+    <h2>Grades</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Math</th>
+            <th>English</th>
+            <th>Java</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td th:text="${session.subject.math}"></td>
+            <td th:text="${session.subject.english}"></td>
+            <td th:text="${session.subject.java}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div id="assignmentsContainer" class="assignments-container" style="display: none;">
+    <h2>Assignments</h2>
+    <div th:each="assignment : ${session.homeWorks}">
+        <div class="card">
+            <h3 th:text="${assignment.subject}"></h3>
+
+            <p><strong>Deadline:</strong> <span th:text="${assignment.inputDate}"></span></p>
+            <p><strong>Title:</strong> <span th:text="${assignment.title}"></span></p>
+            <p class="duration">Time Left: 1 day</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showGrades() {
+        document.getElementById("gradesContainer").style.display = 'block';
+        document.getElementById("assignmentsContainer").style.display = 'none';
+    }
+
+    function showAssignments() {
+        document.getElementById("assignmentsContainer").style.display = 'block';
+        document.getElementById("gradesContainer").style.display = 'none';
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Registration Update</title>
+  <link rel="stylesheet" href="/css/updateStudent.css">
+</head>
+<body>
+<div class="container">
+  <div class="title">Admin Update<h4>for Students </h4></div>
+  <div class="content">
+    <form action="/addStudentSubmit" method="post" th:object="${student}" enctype="multipart/form-data">
+      <div class="user-details">
+        <div class="input-box">
+          <span class="details">Name</span>
+          <input type="text" name="stName" th:value="${studentUpdate.name}" th:field="*{name}" placeholder="Update your name" required>
+        </div>
+        <div class="input-box">
+          <span class="details">Surname</span>
+          <input type="text" name="stSurname" th:value="${studentUpdate.surname}" th:field="*{surname}" placeholder="Update your surname" required>
+        </div>
+        <div class="input-box">
+          <span class="details">Email</span>
+          <input type="email" name="stEmail" th:value="${studentUpdate.email}" th:field="*{email}" placeholder="Update your email" required>
+        </div>
+        <div class="input-box">
+          <span class="details">Group Number</span>
+          <select name="stGroup" th:field="*{groupInfo}"  >
+            <th:block th:each="group:${allGroups}" >
+              <option th:text="${group.groupNumber}" th:value="${group.id}" th:selected="${group.id==studentUpdate.groupInfo.id}"/>
+            </th:block>
+          </select>
+        </div>
+        <div class="input-box">
+          <span class="details">Fee</span>
+          <input type="number" name="stFee" th:field="*{fee}" th:value="${studentUpdate.fee}" placeholder="Update the fee amount" required>
+        </div>
+        <div class="input-box">
+          <span class="details">Birthday</span>
+          <input type="date" name="stDate" th:field="*{birthDay}" th:value="${studentUpdate.birthDay}" required>
+        </div>
+
+      </div>
+      <div class="photo-upload">
+        <label for="photo">Change Photo</label>
+        <input type="file" id="photo" name="photo"  accept="image/*">
+        <img th:src="@{'/images/'+${studentUpdate.image}}" style="width: 80px;height: 80px">
+      </div>
+      <div class="button">
+        <input type="hidden" th:field="*{password}" name="stPassword" th:value="${studentUpdate.password}">
+        <input type="hidden" name="stId" th:value="${studentUpdate.id}" th:field="*{id}">
+        <input type="submit" value="Update">
+        <input type="hidden" name="image" th:value="${studentUpdate.image}">
+      </div>
+    </form>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Registration</title>
+  <link rel="stylesheet" href="/css/teachersreg.css">
+</head>
+<body>
+<div class="container">
+  <div class="title">Admin Registration<h4>for Teacher </h4></div>
+  <div class="content">
+    <form action="/addTeacherSubmit" method="post">
+      <div class="user-details">
+        <div class="input-box">
+          <span class="details">Name</span>
+          <input type="text" name="teName" placeholder="Enter Teacher name" required>
+        </div>
+        <div class="input-box">
+          <span class="details">Surname</span>
+          <input type="text" name="teSurname" placeholder="Enter Teacher surname" required>
+        </div>
+        <div class="input-box">
+          <span class="details">Username</span>
+          <input type="email" name="teUsername" placeholder="Enter Teacher username" required>
+          <input type="hidden" name="oldPassword" value="0">
+          <input type="hidden" name="teId" value="0">
+
+        </div>
+        <div class="input-box">
+          <span class="details">Subject Name</span>
+          <input type="text" name="teSubject" placeholder="Enter the subject name" required>
+        </div>
+        <div class="input-box">
+          <span class="details">Password</span>
+          <input type="password" name="tePassword" placeholder="Enter Teacher password" required>
+        </div>
+
+      </div>
+
+      <div class="button">
+        <input type="submit" value="Register">
+      </div>
+    </form>
+  </div>
+</div>
+</body>
+</html>

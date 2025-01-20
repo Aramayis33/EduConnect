@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Feedback</title>
+    <link rel="stylesheet" href="/css/feedbackstyle.css">
+    <script src="/js/feedbackJs.js"></script>
+</head>
+<body>
+<header class="header">
+    <div class="logo">MyLogo</div>
+    <div class="profile">
+        <button class="profile-btn">AI Assistance</button>
+        <div class="profile-pic">
+            <img class="profile-pic" th:src="@{'/images/' + ${session.student.image}}" alt="Student Image">
+
+        </div>
+    </div>
+</header>
+<div>
+    <section class="feedback-section">
+        <h2 class="feedback-title">We'd Love Your Feedback!</h2>
+        <form action="/addFeedback" method="post">
+        <textarea name="title" class="feedback-textarea" placeholder="Write your feedback here..." oninput="updateCharCount()"></textarea>
+        <div class="character-counter">
+            <span id="charCount">0</span>/500 characters
+        </div>
+        <button type="submit" class="feedback-btn">Send</button>
+        </form>
+    </section>
+    <div class="emoji-rating">
+        <span class="emoji" data-rating="1" onclick="addEmoji('😞')">😞</span>
+        <span class="emoji" data-rating="2" onclick="addEmoji('😐')">😐</span>
+        <span class="emoji" data-rating="3" onclick="addEmoji('😊')">😊</span>
+        <span class="emoji" data-rating="4" onclick="addEmoji('😁')">😁</span>
+        <span class="emoji" data-rating="5" onclick="addEmoji('😍')">😍</span>
+    </div>
+
+
+
+</div>
+
+<div id="homewo">
+    <form action="/student" method="Post">
+        <button type="submit" class="profile-btn">Go Back</button>
+    </form>
+
+</div>
+</body>
+</html>

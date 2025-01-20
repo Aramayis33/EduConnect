@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Registration Update</title>
+    <link rel="stylesheet" href="/css/teacherUpdate.css">
+</head>
+<body>
+<div class="container">
+
+    <div class="title">Admin Update<h4>for Teacher </h4></div>
+    <div class="content">
+        <link>
+
+        <form action="/addTeacherSubmit" method="post">
+            <div class="user-details">
+
+                <div class="input-box">
+                    <span class="details">Name</span>
+                    <input type="text" name="teName" placeholder="Update name" th:value="${teacherUpdate.name}" required>
+                </div>
+
+                <div class="input-box">
+                    <span class="details">Surname</span>
+                    <input type="text" th:value="${teacherUpdate.surname}" name="teSurname" placeholder="Update surname" required>
+                </div>
+
+                <div class="input-box">
+                    <span class="details">Username</span>
+                    <input type="text" th:value="${teacherUpdate.username}" name="teUsername"  placeholder="Update username" required>
+                </div>
+
+                <div class="input-box">
+                    <span class="details">Subject Name</span>
+                    <input type="text" th:value="${teacherUpdate.subject}" name="teSubject" placeholder="Update the subject name" required>
+
+                    <input type="hidden" name="oldPassword" th:value="${teacherUpdate.password}">
+                    <input type="hidden" name="tePassword" th:value="${teacherUpdate.password}">
+                    <input type="hidden" name="teId" th:value="${teacherUpdate.id}">
+
+                </div>
+
+            </div>
+
+
+            <div class="button">
+                <input type="submit" value="Update">
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>
