@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="hy" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Կատարված Տնային Առաջադրանք - EduConnect</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-...your-integrity-hash..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/css/exerciseDone.css">
+</head>
+<body>
+<header class="header">
+  <div class="logo">EduConnect</div>
+  <div class="profile">
+    <div class="profile-pic-container">
+      <img class="profile-pic"
+           th:src="${session.teacher.image} != null ? @{/images/{image}(image=${session.teacher.image})} : @{/images/default.jpg}"
+           alt="Profile Image"
+           onerror="this.src='/images/default.jpg';" />
+      <div class="dropdown">
+        <div class="dropdown-content">
+          <p th:text="'Անուն: ' + ${session.teacher.name} + ' ' + ${session.teacher.surname}"></p>
+          <p th:text="'Առարկա: ' + ${session.teacherSubjects.get(0).name}"></p>
+          <div class="dropdown-actions">
+            <form action="/assistant" method="post"><button type="submit" class="profile-btn"><i class="fas fa-robot"></i> AI օգնական</button></form>
+            <form action="/teacher/settings" method="post"><button type="submit" class="settings-btn"><i class="fas fa-cog"></i> Կարգավորումներ</button></form>
+            <form action="/logout-all" method="get"><button type="submit" class="logOut-btn"><i class="fas fa-sign-out-alt"></i> Ելք</button></form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+<main class="container">
+  <section class="exercise-section">
+    <button class="back-btn" onclick="window.location.href='/teacher'">
+      <i class="fas fa-arrow-left"></i> Հետ Գլխավոր Էջ
+    </button>
+    <div class="exercise-header">
+      <h2 th:text="${session.exerciseDone.homeWork.title}">Կատարված Տնային Առաջադրանք</h2>
+      <div class="status" th:classappend="${session.exerciseDone.isChecked == 1 ? 'checked' : 'unchecked'}">
+        <i th:class="${session.exerciseDone.isChecked == 1 ? 'fas fa-check-circle' : 'fas fa-clock'}"></i>
+        <span th:text="${session.exerciseDone.isChecked == 1 ? 'Ստուգված' : 'Չստուգված'}"></span>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab-buttons">
+        <button class="tab-btn active" data-tab="homework">Տնային</button>
+        <button class="tab-btn" data-tab="student">Ուսանող</button>
+        <button class="tab-btn" data-tab="teacher">Դասախոս</button>
+        <button class="tab-btn" data-tab="answer">Պատասխան</button>
+      </div>
+
+      <div class="tab-content active" id="homework">
+        <h3><i class="fas fa-book"></i> Տնային Առաջադրանք</h3>
+        <p><strong>Առարկա:</strong> <span th:text="${session.exerciseDone.homeWork.subject.name}"></span></p>
+        <p><strong>Նկարագրություն:</strong> <span th:text="${session.exerciseDone.homeWork.description != null ? session.exerciseDone.homeWork.description : 'Հասանելի չէ'}"></span></p>
+        <p><strong>Հանձնման ժամկետ:</strong> <span th:text="${#dates.format(session.exerciseDone.homeWork.expirationDate, 'dd.MM.yyyy HH:mm')}"></span></p>
+        <div class="files-section" th:if="${session.exerciseDone?.homeWork?.fileGroup?.files != null and not #lists.isEmpty(session.exerciseDone?.homeWork?.fileGroup?.files)}">
+          <h4>Կցված Ֆայլեր</h4>
+          <div class="file-list">
+            <a th:each="file : ${session.exerciseDone.homeWork.fileGroup.files}"
+               th:href="'/uploads/' + ${file.fileName}"
+               target="_blank"
+               class="file-link"
+               th:title="${file.fileName}">
+              <i class="fas fa-file-download"></i>
+            </a>
+          </div>
+        </div>
+        <p class="no-files" th:unless="${session.exerciseDone.fileGroup != null and session.exerciseDone.fileGroup.files != null and not #lists.isEmpty(session.exerciseDone.fileGroup.files)}">
+          Ֆայլեր չկան
+        </p>
+      </div>
+
+      <div class="tab-content" id="student">
+        <h3><i class="fas fa-user-graduate"></i> Ուսանող</h3>
+        <p><strong>Անուն:</strong> <span th:text="${session.exerciseDone.student.name + ' ' + session.exerciseDone.student.surname}"></span></p>
+        <p><strong>Խումբ:</strong> <span th:text="${session.exerciseDone.student.groupInfo != null ? session.exerciseDone.student.groupInfo.groupNumber : 'Հասանելի չէ'}"></span></p>
+        <p><strong>Էլ. հասցե:</strong> <span th:text="${session.exerciseDone.student.email != null ? session.exerciseDone.student.email : 'Հասանելի չէ'}"></span></p>
+      </div>
+
+      <div class="tab-content" id="teacher">
+        <h3><i class="fas fa-chalkboard-teacher"></i> Դասախոս</h3>
+        <p><strong>Անուն:</strong> <span th:text="${session.teacher.name + ' ' + session.teacher.surname}"></span></p>
+        <p><strong>Էլ. հասցե:</strong> <span th:text="${session.teacher.email != null ? session.teacher.email : 'Հասանելի չէ'}"></span></p>
+        <p><strong>Առարկաներ:</strong> <span th:text="${session.teacherSubjects != null and not #lists.isEmpty(session.teacherSubjects) ? #strings.listJoin(session.teacherSubjects.![name], ', ') : 'Հասանելի չէ'}"></span></p>
+      </div>
+
+      <div class="tab-content" id="answer">
+        <h3><i class="fas fa-pen"></i> Ուսանողի Պատասխան</h3>
+        <div class="answer-box" th:text="${session.exerciseDone.answerText != null ? session.exerciseDone.answerText : 'Պատասխան չկա'}"></div>
+        <div class="files-section" th:if="${session.exerciseDone.fileGroup.files != null and session.exerciseDone.fileGroup.files != null and not #lists.isEmpty(session.exerciseDone.fileGroup.files)}">
+          <h4>Կցված Ֆայլեր</h4>
+          <div class="file-list">
+            <a th:each="file : ${session.exerciseDone.fileGroup.files}"
+               th:href="'/uploads/' + ${file.fileName}"
+               target="_blank"
+               class="file-link"
+               th:title="${file.fileName}">
+              <i class="fas fa-file-download"></i>
+            </a>
+          </div>
+        </div>
+        <form th:action="@{'/exercise-done/check/' + ${session.exerciseDone.id}}" method="post" th:if="${session.exerciseDone.isChecked == 0}" class="check-form">
+          <button type="submit" class="check-btn">
+            <i class="fas fa-check"></i> Նշել որպես ստուգված
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  document.querySelectorAll('.tab-btn').forEach(button => {
+    button.addEventListener('click', () => {
+      const tabId = button.getAttribute('data-tab');
+
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+      button.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="hy" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Իրադարձություններ</title>
+    <link rel="stylesheet" href="/css/adminPageStyle.css" />
+    <link rel="stylesheet" href="/css/adminEvents.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .pagination button.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .pagination button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<nav class="nav">
+    <div class="nav-header">
+        <h1>EduConnect</h1>
+        <span th:text="${session.admin.name} ?: 'Ադմին'"></span>
+    </div>
+    <ul>
+        <li><a th:classappend="${activePage == 'home' ? 'active' : ''}" href="/admin/home">🏠 Գլխավոր</a></li>
+        <li><a th:classappend="${activePage == 'students' ? 'active' : ''}" href="/admin/st.hk">🎓 Ուսանողներ</a></li>
+        <li><a th:classappend="${activePage == 'teachers' ? 'active' : ''}" href="/admin/teachers">👩‍🏫 Դասախոսներ</a></li>
+        <li><a th:classappend="${activePage == 'groups' ? 'active' : ''}" href="/admin/groups">🧑‍🤝‍🧑 Խմբեր</a></li>
+        <li><a th:classappend="${activePage == 'subjects' ? 'active' : ''}" href="/admin/subjects">📚 Առարկաներ</a></li>
+        <li><a th:classappend="${activePage == 'schedule' ? 'active' : ''}" href="/admin/schedule">🗓️ Դասացուցակ</a></li>
+        <li><a th:classappend="${activePage == 'library' ? 'active' : ''}" href="/admin/library">📖 Գրադարան</a></li>
+        <li><a th:classappend="${activePage == 'videos' ? 'active' : ''}" href="/admin/videos">🎥 Վիդեոդասեր</a></li>
+        <li><a th:classappend="${activePage == 'admins' ? 'active' : ''}" href="/admin/admins">🛠️ Ադմիններ</a></li>
+        <li><a th:classappend="${activePage == 'events' ? 'active' : ''}" href="/admin/events">🔔 Իրադարձություններ</a></li>
+        <li><a href="/admin/logout" class="logout">🚪 Ելք</a></li>
+    </ul>
+</nav>
+
+<!-- Main Content -->
+<main class="content">
+    <!-- Header (Banner) -->
+    <section class="banner">
+        <div class="banner-content">
+            <div class="banner-title">
+                <h2>🔔 Իրադարձություններ</h2>
+                <span class="count-label">Ընդհանուր՝ <strong th:text="${studentNotifications?.size() + teacherNotifications?.size()} ?: '0'"></strong></span>
+            </div>
+            <div class="banner-actions">
+                <button class="banner-btn" onclick="openModal('student')">+ Ուսանողին</button>
+                <button class="banner-btn" onclick="openModal('teacher')">+ Դասախոսին</button>
+                <button class="banner-btn" onclick="openModal('student_group')">+ Ուսանողների խմբին</button>
+                <button class="banner-btn" onclick="openModal('teacher_group')">+ Դասախոսների խմբին</button>
+            </div>
+        </div>
+        <div class="filters">
+            <div class="filter-item">
+                <label for="tableFilter">Ցուցադրել</label>
+                <select id="tableFilter" onchange="filterTable()">
+                    <option value="student" th:selected="${selectedFilter == 'student'}">Ուսանողների ծանուցումներ</option>
+                    <option value="teacher" th:selected="${selectedFilter == 'teacher'}">Դասախոսների ծանուցումներ</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <!-- Notifications List -->
+    <section class="notifications-list">
+        <!-- Student Notifications Table -->
+        <div class="table-header" th:classappend="${selectedFilter == 'student' ? '' : 'hidden'}">
+            <h3>Ուսանողների ծանուցումներ</h3>
+        </div>
+        <div class="table-wrapper" th:classappend="${selectedFilter == 'student' ? '' : 'hidden'}">
+            <table id="studentNotificationsTable">
+                <thead>
+                <tr>
+                    <th>Վերնագիր</th>
+                    <th>Հաղորդագրություն</th>
+                    <th>Ամսաթիվ</th>
+                    <th>Ուսանող</th>
+                    <th>Խումբ</th>
+                    <th>Ծանուցող</th>
+                </tr>
+                </thead>
+                <tbody id="studentNotificationsBody">
+                <tr th:each="notification : ${studentNotifications}">
+                    <td th:text="${notification.messageTitle}"></td>
+                    <td th:text="${notification.messageText}"></td>
+                    <td th:text="${#dates.format(notification.date, 'yyyy-MM-dd')}"></td>
+                    <td th:text="${notification.student?.name ?: ''} + ' ' + ${notification.student?.surname ?: ''}"></td>
+                    <td th:text="${notification.group?.groupNumber}"></td>
+                    <td th:text="${notification.messageType=='admin'? 'Ադմինիստրատոր':'Համակարգ'}"></td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="pagination" id="studentPagination"></div>
+        </div>
+
+        <!-- Teacher Notifications Table -->
+        <div class="table-header" th:classappend="${selectedFilter == 'teacher' ? '' : 'hidden'}">
+            <h3>Դասախոսների ծանուցումներ</h3>
+        </div>
+        <div class="table-wrapper" th:classappend="${selectedFilter == 'teacher' ? '' : 'hidden'}">
+            <table id="teacherNotificationsTable">
+                <thead>
+                <tr>
+                    <th>Վերնագիր</th>
+                    <th>Հաղորդագրություն</th>
+                    <th>Ամսաթիվ</th>
+                    <th>Դասախոս</th>
+                    <th>Առարկա</th>
+                    <th>Ծանուցող</th>
+                </tr>
+                </thead>
+                <tbody id="teacherNotificationsBody">
+                <tr th:each="notification : ${teacherNotifications}">
+                    <td th:text="${notification.messageTitle}"></td>
+                    <td th:text="${notification.messageText}"></td>
+                    <td th:text="${#dates.format(notification.date, 'yyyy-MM-dd')}"></td>
+                    <td th:text="${notification.teacher?.name?: ''} + ' ' + ${notification.teacher?.surname?: ' '}"></td>
+                    <td th:text="${notification.subjects?.name}"></td>
+                    <td th:text="${notification.messageType=='admin'? 'Ադմինիստրատոր':'Համակարգ'}"></td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="pagination" id="teacherPagination"></div>
+        </div>
+    </section>
+
+    <!-- Modals -->
+    <!-- Student Notification Modal -->
+    <div id="studentModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('student')">×</span>
+            <h3>Ստեղծել ուսանողի ծանուցում</h3>
+            <form id="studentNotificationForm" onsubmit="createStudentNotification(event)">
+                <div class="form-group">
+                    <label for="studentMessageTitle">Վերնագիր</label>
+                    <input type="text" id="studentMessageTitle" name="messageTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="studentMessageText">Հաղորդագրություն</label>
+                    <textarea id="studentMessageText" name="messageText" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="studentId">Ուսանող</label>
+                    <select id="studentId" name="studentId" required>
+                        <option value="">Ընտրեք ուսանող</option>
+                        <option th:each="student : ${students}" th:value="${student.id}"
+                                th:text="${student.name} + ' ' + ${student.surname}"></option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn">Հաստատել</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Teacher Notification Modal -->
+    <div id="teacherModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('teacher')">×</span>
+            <h3>Ստեղծել դասախոսի ծանուցում</h3>
+            <form id="teacherNotificationForm" onsubmit="createTeacherNotification(event)">
+                <div class="form-group">
+                    <label for="teacherMessageTitle">Վերնագիր</label>
+                    <input type="text" id="teacherMessageTitle" name="messageTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="teacherMessageText">Հաղորդագրություն</label>
+                    <textarea id="teacherMessageText" name="messageText" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="teacherId">Դասախոս</label>
+                    <select id="teacherId" name="teacherId" required>
+                        <option value="">Ընտրեք դասախոս</option>
+                        <option th:each="teacher : ${teachers}" th:value="${teacher.id}"
+                                th:text="${teacher.name} + ' ' + ${teacher.surname}"></option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn">Հաստատել</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Student Group Notification Modal -->
+    <div id="student_groupModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('student_group')">×</span>
+            <h3>Ստեղծել ուսանողների խմբի ծանուցում</h3>
+            <form id="studentGroupNotificationForm" onsubmit="createStudentGroupNotification(event)">
+                <div class="form-group">
+                    <label for="studentGroupMessageTitle">Վերնագիր</label>
+                    <input type="text" id="studentGroupMessageTitle" name="messageTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="studentGroupMessageText">Հաղորդագրություն</label>
+                    <textarea id="studentGroupMessageText" name="messageText" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="groupId">Խումբ</label>
+                    <select id="groupId" name="groupId" required>
+                        <option value="">Ընտրեք խումբ</option>
+                        <option value="all">Բոլոր խմբերին</option>
+                        <option th:each="group : ${groupInfos}" th:value="${group.id}"
+                                th:text="${group.groupNumber}"></option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn">Հաստատել</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Teacher Group Notification Modal -->
+    <div id="teacher_groupModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('teacher_group')">×</span>
+            <h3>Ստեղծել դասախոսների խմբի ծանուցում</h3>
+            <form id="teacherGroupNotificationForm" onsubmit="createTeacherGroupNotification(event)">
+                <div class="form-group">
+                    <label for="teacherGroupMessageTitle">Վերնագիր</label>
+                    <input type="text" id="teacherGroupMessageTitle" name="messageTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="teacherGroupMessageText">Հաղորդագրություն</label>
+                    <textarea id="teacherGroupMessageText" name="messageText" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="subjectId">Առարկա</label>
+                    <select id="subjectId" name="subjectId" required>
+                        <option value="">Ընտրեք առարկա</option>
+                        <option value="all">Բոլոր խմբերին</option>
+                        <option th:each="subject : ${subjects}" th:value="${subject.id}"
+                                th:text="${subject.name}"></option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn">Հաստատել</button>
+            </form>
+        </div>
+    </div>
+</main>
+
+<script src="/js/adminEvents.js"></script>
+</body>
+</html>

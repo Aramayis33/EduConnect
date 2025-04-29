@@ -2,11 +2,8 @@ package org.example.educonnectjavaproject.security;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-
-@Entity
-
 @AllArgsConstructor
-
+@Entity
 public class Admin {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,14 +17,18 @@ public class Admin {
     @Column(length=100,nullable=false)
     private String password;
 
+    private int isActive;
+
+
     public Admin() {
     }
 
-    public Admin(String name, String surname, String username, String password) {
+    public Admin(String name, String surname, String username, String password,int isActive) {
         this.name = name;
         this.surname = surname;
         this.username = username;
         this.password = password;
+        this.isActive = isActive;
     }
 
     public int getId() {
@@ -68,5 +69,13 @@ public class Admin {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public int getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(int isActive) {
+        this.isActive = isActive;
     }
 }

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="hy" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Դասացուցակ - EduConnect</title>
+    <link rel="stylesheet" href="/css/studentCss.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="/css/schedulestyle.css">
+    <link rel="stylesheet" href="/css/teacherNotificationNavBar.css">
+</head>
+<body>
+<!-- Header (Reused from Teacher Dashboard) -->
+<header class="header" role="banner">
+    <div class="logo" aria-label="EduConnect Logo">EduConnect</div>
+    <!-- Ծանուցումների նշան և dropdown -->
+    <div class="notifications-container">
+        <div class="notification-bell-wrapper">
+            <i class="fas fa-bell notification-bell"></i>
+            <span class="notification-count"
+                  th:text="${teacherNotifications?.size()} ?: '0'"
+                  th:style="${teacherNotifications?.size() == 0} ? 'display: none' : ''"></span>
+        </div>
+        <div class="notifications-dropdown">
+            <div th:if="${teacherNotifications != null and !teacherNotifications.isEmpty()}">
+                <div class="notification-item"
+                     th:each="notification : ${teacherNotifications}"
+                     th:data-notification-id="${notification.id}">
+                    <i class="fas notification-icon"
+                       th:classappend="${notification.messageType == 'admin'} ? 'fa-user-shield admin' : 'fa-cogs system'"></i>
+                    <div class="notification-content">
+                        <h4 th:text="${notification.messageTitle}"></h4>
+                        <p th:text="${notification.messageText.length() > 50 ? notification.messageText.substring(0, 50) + '...' : notification.messageText}"></p>
+                        <div class="notification-date"
+                             th:text="${#dates.format(notification.date, 'dd.MM.yyyy HH:mm')}"></div>
+                    </div>
+                </div>
+                <a href="/teacher/notifications" class="view-all">Տեսնել բոլորը</a>
+            </div>
+            <div th:unless="${teacherNotifications != null and !teacherNotifications.isEmpty()}"
+                 class="no-notifications">
+                Նոր ծանուցումներ չկան
+                <a href="/teacher/notifications" class="view-all">Տեսնել բոլորը</a>
+            </div>
+        </div>
+    </div>
+    <div class="profile" role="region" aria-label="User Profile">
+        <div class="profile-pic-container">
+            <img class="profile-pic"
+                 th:src="${session.teacher.image} != null ? @{/images/{image}(image=${session.teacher.image})} : @{/images/default.jpg}"
+                 alt="Profile Image"
+                 onerror="this.src='/images/default.jpg';"/>
+            <div class="dropdown">
+                <div class="dropdown-content" role="menu">
+                    <p th:text="'Անուն: ' + ${session.teacher.name} + ' ' + ${session.teacher.surname}"></p>
+                    <p th:text="'Առարկա: ' + ${session.teacherSubjects.get(0).name}"></p>
+                    <div class="dropdown-actions">
+                        <form action="/assistant" method="post">
+                            <button type="submit" class="profile-btn" aria-label="AI Assistant"><i
+                                    class="fas fa-robot"></i> AI օգնական
+                            </button>
+                        </form>
+                        <form action="/teacher/settings" method="post">
+                            <button type="submit" class="settings-btn" aria-label="Settings"><i class="fas fa-cog"></i>
+                                Կարգավորումներ
+                            </button>
+                        </form>
+                        <form action="/logout-all" method="get">
+                            <button type="submit" class="logOut-btn" aria-label="Logout"><i
+                                    class="fas fa-sign-out-alt"></i> Ելք
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <section class="schedule-container">
+        <button class="back-btn" onclick="window.location.href='/student'">
+            <i class="fas fa-arrow-left"></i> Հետ Գլխավոր Էջ
+        </button>
+        <h2>Դասացուցակ</h2>
+        <form th:action="@{/teacher/schedule}" method="get" class="filters">
+            <label for="semester">Ընտրեք կիսամյակը:</label>
+            <select name="semester" id="semester" onchange="this.form.submit()">
+                <option value="1" th:selected="${selectedSemester == 1}">Առաջին կիսամյակ</option>
+                <option value="2" th:selected="${selectedSemester == 2}">Երկրորդ կիսամյակ</option>
+            </select>
+            <label for="semesterPart">Ընտրեք մոդուլը:</label>
+            <select name="semesterPart" id="semesterPart" onchange="this.form.submit()">
+                <option value="first" th:selected="${selectedSemesterPart == 'first'}">Առաջին հատված</option>
+                <option value="second" th:selected="${selectedSemesterPart == 'second'}">Երկրորդ հատված</option>
+            </select>
+        </form>
+
+        <div class="schedule-table-wrapper">
+            <table class="schedule-table">
+                <thead>
+                <tr>
+                    <th>Ժամ</th>
+                    <th>Երկուշաբթի</th>
+                    <th>Երեքշաբթի</th>
+                    <th>Չորեքշաբթի</th>
+                    <th>Հինգշաբթի</th>
+                    <th>Ուրբաթ</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="hour : ${#numbers.sequence(1, 6)}">
+                    <td th:text="${hour}"></td>
+                    <td th:each="day : ${#numbers.sequence(1, 5)}">
+                        <div class="schedule-cell">
+                            <th:block th:each="schedule : ${schedules}">
+                                <div th:if="${schedule.classHour == hour and schedule.weekday == day}" class="schedule-item">
+                                    <div class="subject" th:text="${schedule.subject.name}"></div>
+                                    <div class="teacher" th:text=" 'ԽՈՒՄԲ։ '+ ${schedule.group.groupNumber}"></div>
+                                    <div class="classroom" th:text="'ԼՍԱՐԱՆ։ '+ ${schedule.classroom}"></div>
+                                </div>
+                            </th:block>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+<script src="/js/teacherNotificationsBar.js"></script>
+</body>
+</html>

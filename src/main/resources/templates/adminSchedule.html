@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="hy" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Դասացուցակ</title>
+    <link rel="stylesheet" href="/css/adminPageStyle.css" />
+    <link rel="stylesheet" href="/css/adminSchedule.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+</head>
+<body>
+<!-- Navigation -->
+<nav class="nav">
+    <div class="nav-header">
+        <h1>EduConnect</h1>
+        <span th:text="${session.admin.name} ?: 'Ադմին'"></span>
+    </div>
+    <ul>
+        <li><a th:classappend="${activePage == 'home' ? 'active' : ''}" href="/admin/home">🏠 Գլխավոր</a></li>
+        <li><a th:classappend="${activePage == 'students' ? 'active' : ''}" href="/admin/students">🎓 Ուսանողներ</a></li>
+        <li><a th:classappend="${activePage == 'teachers' ? 'active' : ''}" href="/admin/teachers">👩‍🏫 Դասախոսներ</a></li>
+        <li><a th:classappend="${activePage == 'groups' ? 'active' : ''}" href="/admin/groups">🧑‍🤝‍🧑 Խմբեր</a></li>
+        <li><a th:classappend="${activePage == 'subjects' ? 'active' : ''}" href="/admin/subjects">📚 Առարկաներ</a></li>
+        <li><a th:classappend="${activePage == 'schedule' ? 'active' : ''}" href="/admin/schedule">🗓️ Դասացուցակ</a></li>
+        <li><a th:classappend="${activePage == 'library' ? 'active' : ''}" href="/admin/library">📖 Գրադարան</a></li>
+        <li><a th:classappend="${activePage == 'videos' ? 'active' : ''}" href="/admin/videos">🎥 Վիդեոդասեր</a></li>
+        <li><a th:classappend="${activePage == 'admins' ? 'active' : ''}" href="/admin/admins">🛠️ Ադմիններ</a></li>
+        <li><a th:classappend="${activePage == 'events' ? 'active' : ''}" href="/admin/events">🔔 Իրադարձություններ</a></li>        <li><a href="/admin/logout" class="logout">🚪 Ելք</a></li>
+    </ul>
+</nav>
+
+<!-- Main Content -->
+<main class="content">
+    <!-- Banner -->
+    <section class="banner">
+        <div class="banner-content">
+            <div class="banner-title">
+                <h2>🗓️ Դասացուցակ</h2>
+                <span class="count-label">Ընդհանուր դասաժամեր՝ <strong th:text="${schedules?.size()} ?: '0'"></strong></span>
+            </div>
+        </div>
+        <div class="filters">
+            <div class="filter-item">
+                <label for="semester">Կիսամյակ</label>
+                <select name="semester" id="semester" onchange="updateFilters()">
+                    <option value="1" th:selected="${selectedSemester == 1}">Առաջին կիսամյակ</option>
+                    <option value="2" th:selected="${selectedSemester == 2}">Երկրորդ կիսամյակ</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label for="semesterPart">Մոդուլ</label>
+                <select name="semesterPart" id="semesterPart" onchange="updateFilters()">
+                    <option value="first" th:selected="${selectedSemesterPart == 'first'}">Առաջին հատված</option>
+                    <option value="second" th:selected="${selectedSemesterPart == 'second'}">Երկրորդ հատված</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label for="groupNumber">Խումբ</label>
+                <select name="groupNumber" id="groupNumber" onchange="updateFilters()">
+                    <option value="0" th:selected="${selectedGroup == 0}">Ընտրեք խումբ</option>
+                    <th:block th:each="group : ${groups}">
+                        <option th:value="${group.groupNumber}" th:text="'Խումբ ' + ${group.groupNumber}"
+                                th:selected="${selectedGroup == group.groupNumber}"></option>
+                    </th:block>
+                </select>
+            </div>
+        </div>
+    </section>
+    <!-- Schedule Table -->
+    <section class="schedule-list">
+        <div class="schedule-table-wrapper" th:if="${selectedGroup != 0}">
+            <table class="schedule-table">
+                <thead>
+                <tr>
+                    <th>Ժամ</th>
+                    <th>Երկուշաբթի <button class="add-day-btn" onclick="openAddScheduleModal(1)" th:disabled="${selectedGroup == 0}"><i class="fas fa-plus"></i></button></th>
+                    <th>Երեքշաբթի <button class="add-day-btn" onclick="openAddScheduleModal(2)" th:disabled="${selectedGroup == 0}"><i class="fas fa-plus"></i></button></th>
+                    <th>Չորեքշաբթի <button class="add-day-btn" onclick="openAddScheduleModal(3)" th:disabled="${selectedGroup == 0}"><i class="fas fa-plus"></i></button></th>
+                    <th>Հինգշաբթի <button class="add-day-btn" onclick="openAddScheduleModal(4)" th:disabled="${selectedGroup == 0}"><i class="fas fa-plus"></i></button></th>
+                    <th>Ուրբաթ <button class="add-day-btn" onclick="openAddScheduleModal(5)" th:disabled="${selectedGroup == 0}"><i class="fas fa-plus"></i></button></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="hour : ${#numbers.sequence(1, 6)}" th:with="editable=${true}">
+                    <td th:text="${hour}"></td>
+                    <td th:each="day : ${#numbers.sequence(1, 5)}">
+                        <div class="schedule-cell">
+                            <th:block th:each="schedule : ${schedules}">
+                                <th:block th:if="${schedule.classHour == hour and schedule.weekday == day}" th:with="foundSchedule=${true}">
+                                    <div class="schedule-item">
+                                        <div class="subject" th:text="${schedule.subject.name}"></div>
+                                        <div class="teacher" th:text="'ԴԱՍԱԽՈՍ։ ' + ${schedule.teacher.name} + ' ' + ${schedule.teacher.surname}"></div>
+                                        <div class="classroom" th:text="'ԼՍԱՐԱՆ։ ' + ${schedule.classroom}"></div>
+                                    </div>
+                                    <button th:with="editable=${false}" class="edit-btn"
+                                            th:attr="data-id=${schedule.id},data-day=${day},data-hour=${hour},data-subject-id=${schedule.subject.id},data-teacher-id=${schedule.teacher.id},data-classroom=${schedule.classroom}"
+                                            onclick="openEditScheduleModalFromButton(this)">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+
+                                    <button class="delete-btn" th:onclick="'deleteSchedule(' + ${schedule.id} + ')'">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+
+                                </th:block>
+                            </th:block>
+                            <th:block th:unless="${editable}">
+                                <button class="edit-btn" th:onclick="'openEditScheduleModal(null,' + ${day} + ',' + ${hour} + ',null,null)'">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </th:block>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div th:if="${selectedGroup == 0}" class="no-selection">
+            <p>Խնդրում ենք ընտրել խումբ՝ դասացուցակը դիտելու համար:</p>
+        </div>
+    </section>
+
+    <!-- Edit Schedule Modal -->
+    <div id="editScheduleModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeEditScheduleModal()">×</span>
+            <h3 id="modalTitle">Դասաժամ</h3>
+            <form id="editScheduleForm" onsubmit="updateSchedule(event)">
+                <input type="hidden" id="editScheduleId" name="scheduleId">
+                <input type="hidden" name="groupNumber" th:value="${selectedGroup}">
+                <input type="hidden" name="semester" th:value="${selectedSemester}">
+                <input type="hidden" name="semesterPart" th:value="${selectedSemesterPart}">
+                <div class="form-group">
+                    <label for="weekday">Շաբաթվա օր</label>
+                    <select id="weekday" name="weekday" disabled required>
+                        <option value="1">Երկուշաբթի</option>
+                        <option value="2">Երեքշաբթի</option>
+                        <option value="3">Չորեքշաբթի</option>
+                        <option value="4">Հինգշաբթի</option>
+                        <option value="5">Ուրբաթ</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="classHour">Դասաժամ</label>
+                    <select id="classHour" name="classHour" disabled required>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="subjectId">Առարկա</label>
+                    <select id="subjectId" name="subjectId" required>
+                        <option value="">Ընտրեք առարկա</option>
+                        <option th:each="subject : ${subjects}" th:value="${subject.id}" th:text="${subject.name}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="teacherId">Դասախոս</label>
+                    <select id="teacherId" name="teacherId" required>
+                        <option value="">Ընտրեք դասախոս</option>
+                        <option th:each="teacher : ${teachers}" th:value="${teacher.id}"
+                                th:text="${teacher.name} + ' ' + ${teacher.surname}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="classroom">Լսարան</label>
+                    <input type="text" id="classroom" name="classroom" required>
+                </div>
+                <button type="submit" class="submit-btn">Հաստատել</button>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Add Schedule Modal -->
+    <div id="addScheduleModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeAddScheduleModal()">×</span>
+            <h3>Ավելացնել դասաժամ</h3>
+            <form id="addScheduleForm" onsubmit="addSchedule(event)">
+                <div class="form-group">
+                    <label for="addGroupNumber">Խումբ</label>
+                    <select id="addGroupNumber" name="groupNumber" onmousedown="return false;" required>
+                        <th:block th:each="group : ${groups}">
+                            <option th:if="${selectedGroup == group.groupNumber}"
+                                    th:value="${group.groupNumber}"
+                                    th:text="'Խումբ ' + ${group.groupNumber}"
+                                    selected></option>
+                        </th:block>
+                        <option th:if="${selectedGroup == 0}" value="0" selected>Ընտրեք խումբ</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="addSemester">Կիսամյակ</label>
+                    <select id="addSemester" name="semester" onmousedown="return false;" required>
+                        <option th:if="${selectedSemester == 1}" value="1" selected>Առաջին կիսամյակ</option>
+                        <option th:if="${selectedSemester == 2}" value="2" selected>Երկրորդ կիսամյակ</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="addSemesterPart">Կիսամյակի հատված</label>
+                    <select id="addSemesterPart" name="semesterPart" onmousedown="return false;" required>
+                        <option th:if="${selectedSemesterPart == 'first'}" value="first" selected>Առաջին</option>
+                        <option th:if="${selectedSemesterPart == 'second'}" value="second" selected>Երկրորդ</option>
+                        <option th:if="${selectedSemesterPart == 'all'}" value="all" selected>Ամբողջը</option>
+                    </select>
+                </div>
+                <div class="form-group checkbox-group">
+                    <label>
+                        <input type="checkbox" id="allSemesterCheckbox" onchange="toggleSemesterPart()">
+                        <span>Ամբողջ կիսամյակի համար</span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="addWeekday">Շաբաթվա օր</label>
+                    <select id="addWeekday" name="weekday" onmousedown="return false;" required>
+                        <option value="1" th:selected="${weekday == 1}">Երկուշաբթի</option>
+                        <option value="2" th:selected="${weekday == 2}">Երեքշաբթի</option>
+                        <option value="3" th:selected="${weekday == 3}">Չորեքշաբթի</option>
+                        <option value="4" th:selected="${weekday == 4}">Հինգշաբթի</option>
+                        <option value="5" th:selected="${weekday == 5}">Ուրբաթ</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="addClassHour">Դասաժամ</label>
+                    <select id="addClassHour" name="classHour" required>
+                        <option value="">Ընտրեք ժամ</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="addSubjectId">Առարկա</label>
+                    <select id="addSubjectId" name="subjectId" required>
+                        <option value="">Ընտրեք առարկա</option>
+                        <option th:each="subject : ${subjects}" th:value="${subject.id}" th:text="${subject.name}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="addTeacherId">Դասախոս</label>
+                    <select id="addTeacherId" name="teacherId" required>
+                        <option value="">Ընտրեք դասախոս</option>
+                        <option th:each="teacher : ${teachers}" th:value="${teacher.id}"
+                                th:text="${teacher.name} + ' ' + ${teacher.surname}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="addClassroom">Լսարան</label>
+                    <input type="text" id="addClassroom" name="classroom" required>
+                </div>
+                <button type="submit" class="submit-btn">Ավելացնել</button>
+            </form>
+        </div>
+    </div>
+
+</main>
+
+<script src="/js/adminSchedule.js"></script>
+</body>
+</html>

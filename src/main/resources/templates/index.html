@@ -1,27 +1,51 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-    <link rel="stylesheet" type="text/css" href="/css/style.css">
-    <script src="/js/script.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EduConnect - Մուտք</title>
+    <link rel="stylesheet" type="text/css" href="/css/style.css" />
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script src="/js/script.js" defer></script>
 </head>
 <body>
-
-<div class="login-container">
-    <h2>EduConnect</h2>
-    <form action="/home" method="POST">
-        <input type="text" class="input-field" name="username" placeholder="Username or Email" required>
-        <input type="password" class="input-field" name="password" placeholder="Password" required>
-        <button type="submit" class="login-button">Login</button>
-        <p style="font-size: 10px; color: red" th:if="${param.loginError}" th:text="'մուտքանունը կամ գաղտնաբառը սխալ է'"/>
-    </form>
-    <a href="#" onclick="forgotPassword()" class="forgot-password">Forgot Password?</a>
+<div class="container">
+    <div class="left-side">
+        <img src="/images/educonnect_logo.png" alt="EduConnect Logo" class="logo" />
+    </div>
+    <div class="right-side">
+        <a href="/activate" class="activate-button">Օգտահաշվի ակտիվացում</a>
+        <div class="login-box">
+            <h2>Մուտք օգտահաշիվ</h2>
+            <form action="/home" method="POST" id="loginForm">
+                <div class="input-group">
+                    <label for="username">Էլ․ հասցե</label>
+                    <input type="text" id="username" class="input-field" name="username" placeholder="Էլ․ հասցե" required />
+                </div>
+                <div class="input-group">
+                    <label for="password">Գաղտնաբառ</label>
+                    <input type="password" id="password" class="input-field" name="password" placeholder="Գաղտնաբառ" required />
+                </div>
+                <div class="input-group">
+                    <label>
+                        <input type="checkbox" name="remember-me" /> Հիշել ինձ
+                    </label>
+                </div>
+                <div class="input-group">
+                    <div class="g-recaptcha" th:data-sitekey="${@environment.getProperty('google.recaptcha.site-key')}" data-callback="enableLoginButton"></div>
+                </div>
+                <button type="submit" class="login-button" id="loginButton" disabled>Մուտք</button>
+                <p class="error-message" th:if="${param.loginError}" th:text="'Մուտքանունը կամ գաղտնաբառը սխալ է'" />
+                <p class="error-message" th:if="${param.captchaError}" th:text="'Խնդրում ենք հաստատել, որ ռոբոտ չեք'" />
+            </form>
+            <a href="/forgot-password" class="forgot-password">Մոռացե՞լ եք գաղտնաբառը</a>
+        </div>
+    </div>
 </div>
-
-<div class="footer">
-    <p>&copy; 2024 EduConnect - All Rights Reserved</p>
-</div>
-
+<script>
+    function enableLoginButton() {
+        document.getElementById('loginButton').disabled = false;
+    }
+</script>
 </body>
 </html>

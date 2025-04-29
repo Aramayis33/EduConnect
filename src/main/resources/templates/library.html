@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="hy" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Գրադարան - EduConnect</title>
+    <link rel="stylesheet" href="/css/studentCss.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="/css/library.css">
+    <link rel="stylesheet" href="/css/notificationbarStyle.css">
+</head>
+<body>
+<header class="header">
+    <div class="logo">EduConnect</div>
+    <div class="profile">
+
+        <!-- Ծանուցումների նշան և dropdown -->
+        <div class="notifications-container">
+            <div class="notification-bell-wrapper">
+                <i class="fas fa-bell notification-bell"></i>
+                <span class="notification-count"
+                      th:text="${studentNotification?.size()} ?: '0'"
+                      th:style="${studentNotification?.size() == 0} ? 'display: none' : ''"></span>
+            </div>
+            <div class="notifications-dropdown">
+                <div th:if="${studentNotification != null and !studentNotification.isEmpty()}">
+                    <div class="notification-item"
+                         th:each="notification : ${studentNotification}"
+                         th:data-notification-id="${notification.id}">
+                        <i class="fas notification-icon"
+                           th:classappend="${notification.messageType == 'admin'} ? 'fa-user-shield admin' : 'fa-cogs system'"></i>
+                        <div class="notification-content">
+                            <h4 th:text="${notification.messageTitle}"></h4>
+                            <p th:text="${notification.messageText.length() > 50 ? notification.messageText.substring(0, 50) + '...' : notification.messageText}"></p>
+                            <div class="notification-date"
+                                 th:text="${#dates.format(notification.date, 'dd.MM.yyyy HH:mm')}"></div>
+                        </div>
+                    </div>
+                    <a href="/student/notifications" class="view-all">Տեսնել բոլորը</a>
+                </div>
+                <div th:unless="${studentNotification != null and !studentNotification.isEmpty()}"
+                     class="no-notifications">
+                    Նոր ծանուցումներ չկան
+                    <a href="/student/notifications" class="view-all">Տեսնել բոլորը</a>
+                </div>
+            </div>
+
+        <div class="profile-pic-container">
+            <img class="profile-pic" th:src="${session.student.image} != null ? @{/images/{image}(image=${session.student.image})} : @{/images/default.jpg}"
+                 th:alt="'Profile Image'"
+                 onerror="this.onerror=null; this.src='/images/default.jpg';" />
+            <div class="dropdown">
+                <div class="dropdown-content">
+                    <p th:text="'Անուն: ' + ${session.student.name} + ' ' + ${session.student.surname}"></p>
+                    <p th:text="'Խումբ: ' + ${session.student.groupInfo.groupNumber}"></p>
+                    <div class="dropdown-actions">
+                        <form action="/assistant" method="post">
+                            <button type="submit" class="profile-btn"><i class="fas fa-robot"></i> AI օգնական</button>
+                        </form>
+                        <form action="/student/settings" method="post">
+                            <button type="submit" class="settings-btn"><i class="fas fa-cog"></i> Կարգավորումներ</button>
+                        </form>
+                        <form action="/logout-all" method="get">
+                            <button type="submit" class="logOut-btn"><i class="fas fa-sign-out-alt"></i> Ելք</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <section class="library-container">
+        <button class="back-btn" onclick="window.location.href='/student'">
+            <i class="fas fa-arrow-left"></i> <span>Հետ Գլխավոր Էջ</span>
+        </button>
+        <h2>Գրադարան</h2>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <label for="subject-filter">Առարկա:</label>
+                <select id="subject-filter">
+                    <option value="">Ընտրեք առարկա</option>
+                    <th:block>
+                        <option th:each="subjects : ${session.subjectList}"
+                                th:value="${subjects.name}"
+                                th:text="${subjects.name}"></option>
+                    </th:block>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="grade-filter">Կուրս:</label>
+                <select id="grade-filter">
+                    <option value="">Ընտրեք կուրս</option>
+                    <th:block>
+                        <option th:value="1" th:text="1"></option>
+                        <option th:value="2" th:text="2"></option>
+                        <option th:value="3" th:text="3"></option>
+                        <option th:value="4" th:text="4"></option>
+                    </th:block>
+                </select>
+            </div>
+        </div>
+
+        <!-- Library List -->
+        <div class="library-list" id="library-list">
+            <div class="library-card" th:each="book : ${session.libraryList}"
+                 th:data-subject="${book.subject.name}"
+                 th:data-grade="${book.grade}">
+                <div class="thumbnail-container">
+                    <img th:src="@{'uploads/'+${book.thumbnailImage}}"
+                         alt="Գրքի մանրապատկեր" class="thumbnail-image">
+                </div>
+                <div class="book-info">
+                    <h3 class="book-title" th:text="${book.title}"></h3>
+                    <p class="book-subject" th:text="'Առարկա: ' + ${book.subject.name}"></p>
+                    <p class="book-grade" th:text="'Կուրս: ' + ${book.grade}"></p>
+                    <p class="book-author" th:text="'Հեղինակ: ' + ${book.bookAuthor}"></p>
+                    <p class="book-year" th:text="'Հրատարակման տարի: ' + ${book.bookPublicationYear}"></p>
+                    <a th:href="@{'/uploads/' + ${book.fileName}}" target="_blank" class="download-btn">
+                        <i class="fas fa-download"></i> Դիտել
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="pagination">
+            <button id="prev-page" class="page-btn"><i class="fas fa-arrow-left"></i> </button>
+            <div id="page-numbers" class="page-numbers"></div>
+            <button id="next-page" class="page-btn"> <i class="fas fa-arrow-right"></i></button>
+        </div>
+
+        <!-- No Results -->
+        <div class="no-results" id="no-results">
+            <i class="fas fa-search" id="search-icon"></i>
+            <p id="no-results-text">Ընտրեք ֆիլտրեր՝ ցանկալի արդյունքը տեսնելու համար</p>
+        </div>
+    </section>
+</main>
+<script src="/js/notificationsBarJs.js"></script>
+<script src="/js/library.js"></script>
+</body>
+</html>

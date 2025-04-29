@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="hy" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Վիդեոդասեր</title>
+    <link rel="stylesheet" href="/css/adminPageStyle.css"/>
+    <link rel="stylesheet" href="/css/adminLibrary.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+</head>
+<body>
+<!-- Navigation -->
+<nav class="nav">
+    <div class="nav-header">
+        <h1>EduConnect</h1>
+        <span th:text="${session.admin.name} ?: 'Ադմին'"></span>
+    </div>
+    <ul>
+        <li><a th:classappend="${activePage == 'home' ? 'active' : ''}" href="/admin/home">🏠 Գլխավոր</a></li>
+        <li><a th:classappend="${activePage == 'students' ? 'active' : ''}" href="/admin/students">🎓 Ուսանողներ</a></li>
+        <li><a th:classappend="${activePage == 'teachers' ? 'active' : ''}" href="/admin/teachers">👩‍🏫 Դասախոսներ</a></li>
+        <li><a th:classappend="${activePage == 'groups' ? 'active' : ''}" href="/admin/groups">🧑‍🤝‍🧑 Խմբեր</a></li>
+        <li><a th:classappend="${activePage == 'subjects' ? 'active' : ''}" href="/admin/subjects">📚 Առարկաներ</a></li>
+        <li><a th:classappend="${activePage == 'schedule' ? 'active' : ''}" href="/admin/schedule">🗓️ Դասացուցակ</a></li>
+        <li><a th:classappend="${activePage == 'library' ? 'active' : ''}" href="/admin/library">📖 Գրադարան</a></li>
+        <li><a th:classappend="${activePage == 'videos' ? 'active' : ''}" href="/admin/videos">🎥 Վիդեոդասեր</a></li>
+        <li><a th:classappend="${activePage == 'admins' ? 'active' : ''}" href="/admin/admins">🛠️ Ադմիններ</a></li>
+        <li><a th:classappend="${activePage == 'events' ? 'active' : ''}" href="/admin/events">🔔 Իրադարձություններ</a></li>        <li><a href="/admin/logout" class="logout">🚪 Ելք</a></li>
+    </ul>
+</nav>
+
+<!-- Main Content -->
+<main class="content">
+    <!-- Banner -->
+    <section class="banner">
+        <div class="banner-content">
+            <div class="banner-title">
+                <h2>🎥 Վիդեոդասեր</h2>
+                <span class="count-label">Ընդհանուր վիդեոդասեր՝ <strong th:text="${videoLessons?.size()} ?: '0'"></strong></span>
+            </div>
+            <div class="banner-actions">
+                <button class="banner-btn" id="add-video-btn"><i class="fas fa-plus"></i> Ավելացնել Վիդեոդաս</button>
+            </div>
+        </div>
+        <div class="filters">
+            <div class="filter-item">
+                <label for="subject-filter">Առարկա:</label>
+                <select id="subject-filter">
+                    <option value="">Ընտրեք առարկան</option>
+                    <th:block th:each="subject : ${subjectList}">
+                        <option th:value="${subject.name}" th:text="${subject.name}"></option>
+                    </th:block>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label for="grade-filter">Կուրս:</label>
+                <select id="grade-filter">
+                    <option value="">Ընտրեք կուրսը</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <!-- Video Lessons List -->
+    <section class="library-list">
+        <div id="no-results" class="no-results">
+            <i id="search-icon" class="fas fa-search"></i>
+            <p id="no-results-text">Ընտրեք առարկան և կուրսը ցանկալի արդյունքը տեսնելու համար</p>
+        </div>
+
+        <div id="video-list" class="library-grid">
+            <div class="library-card video-card" th:each="video : ${videoLessons}"
+                 th:data-subject="${video.subject.name}"
+                 th:data-subject-id="${video.subject.id}"
+                 th:data-grade="${video.grade}">
+                <div class="thumbnail-container">
+                    <img th:src="@{'/Uploads/' + ${video.videoUrl} + '?thumbnail=true'}"
+                         alt="Վիդեոդասի մանրապատկեր" class="thumbnail-image"
+                         onerror="this.src='/images/thumbnail.jpg';">
+                    <i class="fas fa-play play-icon"></i>
+                </div>
+                <div class="book-info">
+                    <h3 class="book-title" th:text="${video.title}"></h3>
+                    <div class="info-item">
+                        <span class="info-icon">📚</span>
+                        <p><strong>Առարկա:</strong> <span th:text="${video.subject.name}"></span></p>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">🎓</span>
+                        <p><strong>Կուրս:</strong> <span th:text="${video.grade}"></span></p>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">📝</span>
+                        <p><strong>Նկարագրություն:</strong> <span th:text="${video.description}"></span></p>
+                    </div>
+                    <div class="info-item" th:if="${video.teacher != null}">
+                        <span class="info-icon">👩‍🏫</span>
+                        <p><strong>Դասախոս:</strong> <span th:text="${video.teacher.name} + ' ' + ${video.teacher.surname}"></span></p>
+                    </div>
+                </div>
+                <div class="book-actions">
+                    <a th:href="@{'/Uploads/' + ${video.videoUrl}}" target="_blank" class="download-btn">
+                        <i class="fas fa-play"></i> Դիտել
+                    </a>
+                    <button class="edit-btn" th:attr="data-id=${video.id}"><i class="fas fa-edit"></i> Խմբագրել</button>
+                    <button class="delete-btn" th:attr="data-id=${video.id}"><i class="fas fa-trash"></i> Ջնջել</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="pagination" class="pagination">
+            <button id="prev-page" class="page-btn"><i class="fas fa-chevron-left"></i> Նախորդ</button>
+            <div id="page-numbers" class="page-numbers"></div>
+            <button id="next-page" class="page-btn">Հաջորդ <i class="fas fa-chevron-right"></i></button>
+        </div>
+    </section>
+
+    <!-- Add/Edit Video Modal -->
+    <div class="modal" id="add-video-modal">
+        <div class="modal-content">
+            <span class="close-btn">×</span>
+            <h3 id="modal-title">Ավելացնել Վիդեոդաս</h3>
+            <form id="video-form" th:action="@{/addVideo}" method="post" enctype="multipart/form-data">
+                <input type="hidden" id="video-id" name="id">
+                <div class="form-group">
+                    <label for="video-title">Վերնագիր:</label>
+                    <input type="text" id="video-title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="video-subject">Առարկա:</label>
+                    <select id="video-subject" name="subject" required>
+                        <option value="">Ընտրեք առարկա</option>
+                        <th:block th:each="subject : ${subjectList}">
+                            <option th:value="${subject.id}" th:text="${subject.name}"></option>
+                        </th:block>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="video-grade">Կուրս:</label>
+                    <select id="video-grade" name="grade" required>
+                        <option value="">Ընտրեք կուրս</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="video-description">Նկարագրություն:</label>
+                    <textarea id="video-description" name="description" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="video-file">Վիդեո Ֆայլ:</label>
+                    <input type="file" id="video-file" name="file" accept="video/*">
+                    <span class="file-info" id="video-file-info"></span>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="submit-btn"><i class="fas fa-save"></i> Պահպանել</button>
+                    <button type="button" class="cancel-btn"><i class="fas fa-times"></i> Չեղարկել</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="delete-confirm-modal">
+        <div class="modal-content">
+            <span class="close-btn">×</span>
+            <h3>Հաստատել Ջնջումը</h3>
+            <p>Վստա՞հ եք, որ ցանկանում եք ջնջել այս վիդեոդասը:</p>
+            <div class="form-actions">
+                <button id="confirm-delete" class="submit-btn"><i class="fas fa-trash"></i> Ջնջել</button>
+                <button id="cancel-delete" class="cancel-btn"><i class="fas fa-times"></i> Չեղարկել</button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="/js/adminVideoLesson.js"></script>
+</body>
+</html>

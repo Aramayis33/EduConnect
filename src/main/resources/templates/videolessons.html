@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="hy" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Վիդեոդասեր - EduConnect</title>
+    <link rel="stylesheet" href="/css/studentCss.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+          integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link rel="stylesheet" href="/css/videolessons.css">
+    <link rel="stylesheet" href="/css/notificationbarStyle.css">
+    <script src="/js/videolessons.js"></script>
+</head>
+<body>
+<header class="header">
+    <div class="logo">EduConnect</div>
+    <div class="profile">
+
+        <!-- Ծանուցումների նշան և dropdown -->
+        <div class="notifications-container">
+            <div class="notification-bell-wrapper">
+                <i class="fas fa-bell notification-bell"></i>
+                <span class="notification-count"
+                      th:text="${studentNotification?.size()} ?: '0'"
+                      th:style="${studentNotification?.size() == 0} ? 'display: none' : ''"></span>
+            </div>
+            <div class="notifications-dropdown">
+                <div th:if="${studentNotification != null and !studentNotification.isEmpty()}">
+                    <div class="notification-item"
+                         th:each="notification : ${studentNotification}"
+                         th:data-notification-id="${notification.id}">
+                        <i class="fas notification-icon"
+                           th:classappend="${notification.messageType == 'admin'} ? 'fa-user-shield admin' : 'fa-cogs system'"></i>
+                        <div class="notification-content">
+                            <h4 th:text="${notification.messageTitle}"></h4>
+                            <p th:text="${notification.messageText.length() > 50 ? notification.messageText.substring(0, 50) + '...' : notification.messageText}"></p>
+                            <div class="notification-date"
+                                 th:text="${#dates.format(notification.date, 'dd.MM.yyyy HH:mm')}"></div>
+                        </div>
+                    </div>
+                    <a href="/student/notifications" class="view-all">Տեսնել բոլորը</a>
+                </div>
+                <div th:unless="${studentNotification != null and !studentNotification.isEmpty()}"
+                     class="no-notifications">
+                    Նոր ծանուցումներ չկան
+                    <a href="/student/notifications" class="view-all">Տեսնել բոլորը</a>
+                </div>
+            </div>
+
+        <div class="profile-pic-container">
+            <img class="profile-pic" th:src="${session.student.image} != null ? @{/images/{image}(image=${session.student.image})} : @{/images/default.jpg}"
+                 th:alt="'Profile Image'"
+                 onerror="this.onerror=null; this.src='/images/default.jpg';" />
+            <div class="dropdown">
+                <div class="dropdown-content">
+                    <p th:text="'Անուն: ' + ${session.student.name} + ' ' + ${session.student.surname}"></p>
+                    <p th:text="'Խումբ: ' + ${session.student.groupInfo.groupNumber}"></p>
+                    <div class="dropdown-actions">
+                        <form action="/assistant" method="post">
+                            <button type="submit" class="profile-btn"><i class="fas fa-robot"></i> AI օգնական</button>
+                        </form>
+                        <form action="/student/settings" method="post">
+                            <button type="submit" class="settings-btn"><i class="fas fa-cog"></i> Կարգավորումներ
+                            </button>
+                        </form>
+                        <form action="/logout-all" method="get">
+                            <button type="submit" class="logOut-btn"><i class="fas fa-sign-out-alt"></i> Ելք</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <section class="video-lessons-container">
+        <button class="back-btn" onclick="window.location.href='/student'">
+            <i class="fas fa-arrow-left"></i> Հետ Գլխավոր Էջ
+        </button>
+        <h2>Վիդեոդասեր</h2>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <label for="subject-filter">Առարկա:</label>
+                <select id="subject-filter">
+                    <option value="">Ընտրեք առարկա</option>
+                    <th:block>
+                        <option th:each="subjects : ${session.subjectList}"
+                                th:value="${subjects.name}"
+                                th:text="${subjects.name}"></option>
+                        <!--                                th:unless="${#lists.contains(#lists.subListOf(session.videoLessons, 0, lessonStat.index), lesson.subject.name)}"></option>-->
+                    </th:block>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="grade-filter">Կուրս:</label>
+                <select id="grade-filter">
+                    <option value="">Ընտրեք կուրս</option>
+                    <th:block>
+                        <option th:value="1" th:text="1"></option>
+                        <option th:value="2" th:text="2"></option>
+                        <option th:value="3" th:text="3"></option>
+                        <option th:value="4" th:text="4"></option>
+                    </th:block>
+                </select>
+            </div>
+        </div>
+
+        <!-- Video Lessons List -->
+        <div class="video-lessons-list" id="video-lessons-list">
+            <div class="video-lesson-card" th:each="lesson : ${session.videoLessons}"
+                 th:data-subject="${lesson.subject.name}" th:data-grade="${lesson.grade}">
+                <div class="lesson-info">
+                    <h3 class="lesson-title" th:text="${lesson.title}"></h3>
+                    <p class="lesson-subject" th:text="'Առարկա: ' + ${lesson.subject.name}"></p>
+                    <p class="lesson-grade" th:text="'Կուրս: ' + ${lesson.grade}"></p>
+                    <p class="lesson-description" th:text="${lesson.description}"></p>
+                </div>
+                <div class="video-preview">
+                    <div class="video-thumbnail" th:data-video-url="${'uploads/' + lesson.videoUrl}">
+                        <img src="/images/thumbnail.jpg" alt="Video Thumbnail" class="thumbnail-image">
+                        <i class="fas fa-play play-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Results with Search Icon -->
+        <div class="no-results" id="no-results">
+            <i class="fas fa-search" id="search-icon"></i>
+            <p id="no-results-text">Ընտրեք առարկան և կուրսը ցանկալի արդյունքը տեսնելու համար</p>
+        </div>
+
+        <div class="pagination" id="pagination">
+            <button id="prev-page" class="page-btn"><i class="fas fa-arrow-left"></i></button>
+            <div id="page-numbers" class="page-numbers"></div>
+            <button id="next-page" class="page-btn"><i class="fas fa-arrow-right"></i></button>
+        </div>
+    </section>
+</main>
+<script src="/js/notificationsBarJs.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="hy" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Կատարել Տնային Առաջադրանք - EduConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-...your-integrity-hash..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="/css/doExercise.css">
+</head>
+<body>
+<header class="header">
+    <div class="logo">EduConnect</div>
+    <div class="profile">
+        <div class="profile-pic-container">
+            <img class="profile-pic" th:src="${session.student.image} != null ? @{/images/{image}(image=${session.student.image})} : @{/images/default.jpg}"
+                 th:alt="'Profile Image'"
+                 onerror="this.onerror=null; this.src='/images/default.jpg';" />
+            <div class="dropdown">
+                <div class="dropdown-content">
+                    <p th:text="'Անուն: ' + ${session.student.name} + ' ' + ${session.student.surname}"></p>
+                    <p th:text="'Խումբ: ' + ${session.student.groupInfo.groupNumber}"></p>
+                    <div class="dropdown-actions">
+                        <form action="/assistant" method="post">
+                            <button type="submit" class="profile-btn"><i class="fas fa-robot"></i> AI օգնական</button>
+                        </form>
+                        <form action="/student/settings" method="post">
+                            <button type="submit" class="settings-btn"><i class="fas fa-cog"></i> Կարգավորումներ</button>
+                        </form>
+                        <form action="/logout-all" method="get">
+                            <button type="submit" class="logOut-btn"><i class="fas fa-sign-out-alt"></i> Ելք</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <section class="homework-section">
+        <button class="back-btn" onclick="window.location.href='/student'">
+            <i class="fas fa-arrow-left"></i> Հետ Գլխավոր Էջ
+        </button>
+        <div class="homework-header">
+            <h2 th:text="${session.homeWork.title}">Տնային Առաջադրանք</h2>
+            <div class="timer">
+                <i class="fas fa-clock"></i>
+                <span th:text="'Վավեր է մինչև: ' + ${#dates.format(session.homeWork.expirationDate, 'dd.MM.yyyy')}" id="deadline"></span>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <div class="info-short">
+                <p><strong>Առարկա:</strong> <span th:text="${session.homeWork.subject.name}"></span></p>
+                <p class="description"><strong>Առաջադրանք:</strong> <span class="description-text" th:text="${session.homeWork.description != null ? (session.homeWork.description.length() > 100 ? session.homeWork.description.substring(0, 100) + '...' : session.homeWork.description) : 'Հասանելի նկարագրություն չկա'}"></span></p>
+                <button class="show-more-btn" onclick="toggleInfo()">Ցուցադրել ավելին</button>
+            </div>
+            <div class="info-full" style="display: none;">
+                <p><strong>Առարկա:</strong> <span th:text="${session.homeWork.subject.name}"></span></p>
+                <p><strong>Դասախոս:</strong> <span th:text="${session.homeWork.teacher.name + ' ' + session.homeWork.teacher.surname}"></span></p>
+                <p class="description"><strong>Առաջադրանք:</strong> <span th:text="${session.homeWork.description != null ? session.homeWork.description : 'Հասանելի նկարագրություն չկա'}"></span></p>
+                <button class="show-less-btn" onclick="toggleInfo()">Ցուցադրել քիչ</button>
+            </div>
+            <div class="files-section" th:if="${session.homeWork.fileGroup != null and not #lists.isEmpty(session.homeWork.fileGroup.files)}">
+                <h4>Կցված ֆայլեր</h4>
+                <div class="file-list">
+                    <a th:each="file : ${session.homeWork.fileGroup.files}"
+                       th:href="'/uploads/' + ${file.fileName}"
+                       target="_blank"
+                       class="file-link"
+                       th:title="${file.fileName}">
+                        <i class="fas fa-file-download"></i>
+                    </a>
+                </div>
+            </div>
+            <p class="no-files" th:unless="${session.homeWork.fileGroup != null and not #lists.isEmpty(session.homeWork.fileGroup.files)}">
+                Ֆայլեր չկան
+            </p>
+        </div>
+
+        <form class="submission-form" action="/exercise/submit" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="stId" th:value="${session.student.id}">
+            <input type="hidden" name="homeworkId" th:value="${session.homeWork.id}">
+
+            <label for="answer">Ձեր պատասխանը:</label>
+            <textarea id="answer" name="answer" placeholder="Գրեք Ձեր պատասխանն այստեղ..." required></textarea>
+
+            <div class="file-upload">
+                <label for="file">Կցել ֆայլ (ըստ ցանկության):</label>
+                <input type="file" id="file" name="files" accept=".pdf,.docx,.jpg,.png" multiple>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-paper-plane"></i> Հաստատել
+            </button>
+
+            <div class="progress-bar">
+                <div class="progress" id="progress"></div>
+            </div>
+            <p class="note">Ուշադիր ստուգեք նախքան հաստատելը, քանի որ պատասխանը խմբագրման ենթակա չէ:</p>
+        </form>
+    </section>
+</main>
+
+<script>
+    function toggleInfo() {
+        const shortInfo = document.querySelector(".info-short");
+        const fullInfo = document.querySelector(".info-full");
+        if (shortInfo.style.display === "none") {
+            shortInfo.style.display = "block";
+            fullInfo.style.display = "none";
+        } else {
+            shortInfo.style.display = "none";
+            fullInfo.style.display = "block";
+        }
+    }
+
+    function updateTimer() {
+        const deadlineText = document.getElementById("deadline").textContent.replace("Վավեր է մինչև: ", "");
+        const deadline = new Date(deadlineText.split(".").reverse().join("-"));
+        deadline.setHours(23, 59, 59, 999);
+        const now = new Date();
+        if (now > deadline) {
+            document.getElementById("deadline").textContent = "Ժամկետը լրացել է";
+            document.querySelector(".submit-btn").disabled = true;
+            document.querySelector(".submit-btn").classList.add("disabled");
+        }
+    }
+
+    window.onload = function() {
+        updateTimer();
+        setInterval(updateTimer, 60000);
+    };
+</script>
+</body>
+</html>

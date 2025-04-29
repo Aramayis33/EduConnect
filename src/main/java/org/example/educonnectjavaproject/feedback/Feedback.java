@@ -1,29 +1,33 @@
 package org.example.educonnectjavaproject.feedback;
 
 import jakarta.persistence.*;
+import org.example.educonnectjavaproject.student.Student;
+import org.example.educonnectjavaproject.teacher.Teacher;
 
 import java.sql.Date;
+import java.sql.Timestamp;
 
 @Entity
 public class Feedback {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    private int studentId;
-    private Date date;
+    @ManyToOne
+    @JoinColumn(name="student_id")
+    private Student student;
+    @ManyToOne
+    @JoinColumn(name="teacher_id")
+    private Teacher teacher;
+    private Timestamp date;
     @Column(length = 45, nullable = false)
     private String comment;
     public Feedback() {}
 
-    public Feedback(int id, int studentId, Date date, String comment) {
-        this.id = id;
-        this.studentId = studentId;
-        this.date = date;
-        this.comment = comment;
-    }
 
-    public Feedback(int studentId, Date date, String comment) {
-        this.studentId = studentId;
+
+    public Feedback(Student student, Teacher teacher ,Timestamp date, String comment) {
+        this.student = student;
+        this.teacher = teacher;
         this.date = date;
         this.comment = comment;
     }
@@ -36,21 +40,7 @@ public class Feedback {
         this.id = id;
     }
 
-    public int getStudentId() {
-        return studentId;
-    }
 
-    public void setStudentId(int studentId) {
-        this.studentId = studentId;
-    }
-
-    public Date getDate() {
-        return date;
-    }
-
-    public void setDate(Date date) {
-        this.date = date;
-    }
 
     public String getComment() {
         return comment;
@@ -58,5 +48,29 @@ public class Feedback {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public Student getStudent() {
+        return student;
+    }
+
+    public void setStudent(Student student) {
+        this.student = student;
+    }
+
+    public Teacher getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(Teacher teacher) {
+        this.teacher = teacher;
+    }
+
+    public Timestamp getDate() {
+        return date;
+    }
+
+    public void setDate(Timestamp date) {
+        this.date = date;
     }
 }

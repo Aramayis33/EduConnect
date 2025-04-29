@@ -1,7 +1,11 @@
 package org.example.educonnectjavaproject.security;
 
+//import org.example.educonnectjavaproject.recaptcha.ReCaptchaAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -16,18 +20,20 @@ public class SecurityConfig {
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
-               .authorizeHttpRequests(reg->reg
-                .requestMatchers("/students").authenticated()
-                     //  .requestMatchers("/teacher").authenticated()
+                .authorizeHttpRequests(reg->reg
+//                .requestMatchers("/teacher").authenticated()
+                        //  .requestMatchers("/teacher").authenticated()
 
-                       .anyRequest().permitAll())
+                        .anyRequest().permitAll())
 
 
                 .formLogin(form->form.loginPage("/").permitAll())
-                .formLogin(form->form.defaultSuccessUrl("/admin").permitAll())
+//                .formLogin(form->form.defaultSuccessUrl("/admin").permitAll())
                 .formLogin(form->form.failureUrl("/?loginError=true"));
+
         ;
-return http.build();
+        return http.build();
 
     }
+
 }

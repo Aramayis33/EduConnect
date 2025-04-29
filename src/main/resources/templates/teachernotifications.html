@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ծանուցումներ</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/teacherpagestyle.css">
+  <link rel="stylesheet" href="/css/studentnotifications.css">
+</head>
+<body>
+<!-- Header -->
+<header class="header" role="banner">
+  <div class="logo" aria-label="EduConnect Logo">EduConnect</div>
+
+
+  <div class="profile" role="region" aria-label="User Profile">
+
+    <div class="profile-pic-container">
+
+
+      <img class="profile-pic" th:src="${session.teacher.image} != null ? @{/images/{image}(image=${session.teacher.image})} : @{/images/default.jpg}" alt="Profile Image" onerror="this.src='/images/default.jpg';" />
+      <div class="dropdown">
+        <div class="dropdown-content" role="menu">
+          <p th:text="'Անուն: ' + ${session.teacher.name} + ' ' + ${session.teacher.surname}"></p>
+          <p th:text="'Առարկա: ' + ${session.teacherSubjects.get(0).name}"></p>
+
+          <div class="dropdown-actions">
+            <form action="/assistant" method="post"><button type="submit" class="profile-btn" aria-label="AI Assistant"><i class="fas fa-robot"></i> AI օգնական</button></form>
+            <form action="/teacher/settings" method="post"><button type="submit" class="settings-btn" aria-label="Settings"><i class="fas fa-cog"></i> Կարգավորումներ</button></form>
+            <form action="/logout-all" method="get"><button type="submit" class="logOut-btn" aria-label="Logout"><i class="fas fa-sign-out-alt"></i> Ելք</button></form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+<!-- Main Content -->
+<main class="notifications-page">
+  <div class="notifications-list">
+    <h2>Ծանուցումներ</h2>
+    <div th:if="${teacherNotifications != null and !teacherNotifications.isEmpty()}">
+      <div class="notification-card"
+           th:each="notification : ${teacherNotifications}"
+           th:classappend="${notification.isRead == 1 ? 'read' : 'unread'}"
+           data-aos="fade-up">
+        <i class="fas notification-icon"
+           th:classappend="${notification.messageType == 'admin'} ? 'fa-user-shield admin' : 'fa-cogs system'"></i>
+        <div class="notification-content">
+          <h4 th:text="${notification.messageTitle}"></h4>
+          <p th:text="${notification.messageText}"></p>
+          <div class="notification-date"
+               th:text="${#dates.format(notification.date, 'dd.MM.yyyy HH:mm')}"></div>
+        </div>
+        <div class="notification-status"
+             th:classappend="${notification.isRead == 1 ? 'read' : 'unread'}">
+          <i class="fas"
+             th:classappend="${notification.isRead == 1 ? 'fa-check-circle' : 'fa-circle'}"></i>
+        </div>
+      </div>
+    </div>
+    <div th:unless="${teacherNotifications != null and !teacherNotifications.isEmpty()}"
+         class="no-notifications"
+         data-aos="fade-up">
+      Ծանուցումներ չկան
+    </div>
+  </div>
+</main>
+
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+  AOS.init({
+    duration: 800,
+    easing: 'ease-out-cubic',
+    once: true
+  });
+</script>
+</body>
+</html>

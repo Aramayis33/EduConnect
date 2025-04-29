@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="hy" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Խմբեր</title>
+  <link rel="stylesheet" href="/css/adminPageStyle.css" />
+  <link rel="stylesheet" href="/css/adminGroupPage.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<!-- Navigation -->
+<nav class="nav">
+  <div class="nav-header">
+    <h1>EduConnect</h1>
+    <span th:text="${session.admin.name} ?: 'Ադմին'"></span>
+  </div>
+  <ul>
+    <li><a th:classappend="${activePage == 'home' ? 'active' : ''}" href="/admin/home">🏠 Գլխավոր</a></li>
+    <li><a th:classappend="${activePage == 'students' ? 'active' : ''}" href="/admin/students">🎓 Ուսանողներ</a></li>
+    <li><a th:classappend="${activePage == 'teachers' ? 'active' : ''}" href="/admin/teachers">👩‍🏫 Դասախոսներ</a></li>
+    <li><a th:classappend="${activePage == 'groups' ? 'active' : ''}" href="/admin/groups">🧑‍🤝‍🧑 Խմբեր</a></li>
+    <li><a th:classappend="${activePage == 'subjects' ? 'active' : ''}" href="/admin/subjects">📚 Առարկաներ</a></li>
+    <li><a th:classappend="${activePage == 'schedule' ? 'active' : ''}" href="/admin/schedule">🗓️ Դասացուցակ</a></li>
+    <li><a th:classappend="${activePage == 'library' ? 'active' : ''}" href="/admin/library">📖 Գրադարան</a></li>
+    <li><a th:classappend="${activePage == 'videos' ? 'active' : ''}" href="/admin/videos">🎥 Վիդեոդասեր</a></li>
+    <li><a th:classappend="${activePage == 'admins' ? 'active' : ''}" href="/admin/admins">🛠️ Ադմիններ</a></li>
+    <li><a th:classappend="${activePage == 'events' ? 'active' : ''}" href="/admin/events">🔔 Իրադարձություններ</a></li>    <li><a href="/admin/logout" class="logout">🚪 Ելք</a></li>
+  </ul>
+</nav>
+
+<!-- Main Content -->
+<main class="content">
+  <!-- Header (Banner) -->
+  <section class="banner">
+    <div class="banner-content">
+      <div class="banner-title">
+        <h2>🧑‍🤝‍🧑 Խմբեր</h2>
+        <span class="count-label">Ընդհանուր՝ <strong th:text="${groupInfoMap?.size()} ?: '0'"></strong></span>
+      </div>
+      <div class="banner-actions">
+        <button class="banner-btn" onclick="openAddGroupModal()">+ Ավելացնել խումբ</button>
+      </div>
+    </div>
+    <div class="filters">
+      <div class="filter-item search-container">
+        <input type="text" id="searchInput" placeholder="🔍 Որոնել խմբի համարով..." oninput="filterGroups()">
+      </div>
+    </div>
+  </section>
+
+  <!-- Groups List -->
+  <section class="groups-list">
+    <div class="group-grid">
+      <div th:each="entry : ${groupInfoMap}" class="group-card" th:attr="data-group-number=${entry.key}">
+        <div class="group-info">
+          <h3 th:text="'Խումբ ' + ${entry.key}"></h3>
+          <div class="info-item">
+            <span class="info-icon">👩‍🎓</span>
+            <p><strong>Ուսանողներ:</strong> <span th:text="${entry.value[0]}"></span></p>
+          </div>
+          <div class="info-item">
+            <span class="info-icon">🕒</span>
+            <p><strong>Դասաժամեր:</strong> <span th:text="${entry.value[1]}"></span></p>
+          </div>
+        </div>
+        <div class="group-actions">
+          <button class="delete-btn" th:attr="data-group-number=${entry.key}" onclick="deleteGroup(this)">Ջնջել</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Add Group Modal -->
+  <div id="addGroupModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeAddGroupModal()">×</span>
+      <h3>Ավելացնել նոր խումբ</h3>
+      <form id="addGroupForm" onsubmit="createGroup(event)">
+        <div class="form-group">
+          <label for="groupNumber">Խմբի համար</label>
+          <input type="number" id="groupNumber" name="groupNumber" required pattern="[0-9]+" title="Միայն թվեր">
+          <small class="form-hint">Մուտքագրեք եզակի խմբի համար (օր.՝ 101)</small>
+        </div>
+        <button type="submit" class="submit-btn">Հաստատել</button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<script src="/js/adminGroupPage.js"></script>
+</body>
+</html>

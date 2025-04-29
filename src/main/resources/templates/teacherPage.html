@@ -1,89 +1,374 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hy" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teacher Page</title>
+  <meta name="description" content="EduConnect - Teacher's Electronic Gradebook">
+  <title>EduConnect - Teacher Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="/css/teacherpagestyle.css">
-  <script src="/js/teacherpageanimations.js"></script>
+  <link rel="stylesheet" href="/css/teacherNotificationNavBar.css">
 </head>
 <body>
-<header class="header">
-  <div class="logo">MyLogo</div>
-  <nav class="nav-buttons">
+<!-- Header -->
+<header class="header" role="banner">
+  <div class="logo" aria-label="EduConnect Logo">EduConnect</div>
+  <nav class="nav-buttons" role="navigation" aria-label="Main Navigation">
+    <button onclick="showGrades()" class="nav-btn active" id="activeButton" aria-label="View Grades">Էլ․ մատյան</button>
+    <button onclick="showAssignments()" class="nav-btn" aria-label="View Assignments">Առաջադրանքներ</button>
+    <button onclick="showSummaryResults()" class="nav-btn" aria-label="View Summary Results">Ամփոփիչ արդյունք</button>
+    <div class="dropdown-nav">
+      <button class="nav-btn" aria-haspopup="true" aria-expanded="false">Իմ խմբերը <i class="fas fa-caret-down"></i></button>
+      <div class="dropdown-content-nav" role="menu">
+        <form action="/teacher/partners" method="Get">
+        <button type="submit" role="menuitem">Գործընկերներ</button>
+        </form>
+        <form action="/teacher/schedule" method="GET"><button type="submit" role="menuitem">Դասացուցակ</button></form>
+      </div>
+    </div>
+    <div class="dropdown-nav">
+      <button class="nav-btn" aria-haspopup="true" aria-expanded="false">Ուսումնական <i class="fas fa-caret-down"></i></button>
+      <div class="dropdown-content-nav" role="menu">
+        <form action="/teacher/library" method="GET"><button type="submit" role="menuitem">Գրադարան</button></form>
+        <form action="/teacher/videoLessons" method="GET"><button type="submit" role="menuitem">Վիդեոդասեր</button></form>
+      </div>
+    </div>
   </nav>
-  <div class="profile">
-    <form action="/logout" method="get">
-      <button class="nav-btn">Log Out</button>
-    </form>
-    <a href="https://chatgpt.com/" target="_blank"><button class="profile-btn">AI Assistance</button></a>
+  <div class="notifications-container">
+    <div class="notification-bell-wrapper">
+      <i class="fas fa-bell notification-bell"></i>
+      <span class="notification-count"
+            th:text="${teacherNotifications?.size()} ?: '0'"
+            th:style="${teacherNotifications?.size() == 0} ? 'display: none' : ''"></span>
+    </div>
+    <div class="notifications-dropdown">
+      <div th:if="${teacherNotifications != null and !teacherNotifications.isEmpty()}">
+        <div class="notification-item"
+             th:each="notification : ${teacherNotifications}"
+             th:data-notification-id="${notification.id}">
+          <i class="fas notification-icon"
+             th:classappend="${notification.messageType == 'admin'} ? 'fa-user-shield admin' : 'fa-cogs system'"></i>
+          <div class="notification-content">
+            <h4 th:text="${notification.messageTitle}"></h4>
+            <p th:text="${notification.messageText.length() > 50 ? notification.messageText.substring(0, 50) + '...' : notification.messageText}"></p>
+            <div class="notification-date"
+                 th:text="${#dates.format(notification.date, 'dd.MM.yyyy HH:mm')}"></div>
+          </div>
+        </div>
+        <a href="/teacher/notifications" class="view-all">Տեսնել բոլորը</a>
+      </div>
+      <div th:unless="${teacherNotifications != null and !teacherNotifications.isEmpty()}"
+           class="no-notifications">
+        Նոր ծանուցումներ չկան
+        <a href="/teacher/notifications" class="view-all">Տեսնել բոլորը</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile" role="region" aria-label="User Profile">
+
+    <div class="profile-pic-container">
+
+
+      <img class="profile-pic" th:src="${session.teacher.image} != null ? @{/images/{image}(image=${session.teacher.image})} : @{/images/default.jpg}" alt="Profile Image" onerror="this.src='/images/default.jpg';" />
+      <div class="dropdown">
+        <div class="dropdown-content" role="menu">
+          <p th:text="'Անուն: ' + ${session.teacher.name} + ' ' + ${session.teacher.surname}"></p>
+          <p th:text="'Առարկա: ' + ${session.teacherSubjects.get(0).name}"></p>
+
+          <div class="dropdown-actions">
+            <form action="/assistant" method="post"><button type="submit" class="profile-btn" aria-label="AI Assistant"><i class="fas fa-robot"></i> AI օգնական</button></form>
+            <form action="/teacher/settings" method="post"><button type="submit" class="settings-btn" aria-label="Settings"><i class="fas fa-cog"></i> Կարգավորումներ</button></form>
+            <form action="/feedback" method="get"><button type="submit" class="feedback-btn" aria-label="Settings"><i class="fas fa-comment"></i> Հետադարձ կապ</button></form>
+
+
+
+            <form action="/logout-all" method="get"><button type="submit" class="logOut-btn" aria-label="Logout"><i class="fas fa-sign-out-alt"></i> Ելք</button></form>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </header>
 
-<div class="table-container" id="studentsTable" style="display: block;">
-  <h2>Students</h2>
-
-  <div class="groups-container">
-    <form action="/teacher" method="get">
-      <input type="submit" value="All" class="group-button">
-
-    </form>
-    <form action="/teacher/group" method="get" th:each="group:${session.allGroups}">
-      <input type="hidden" name="filterGroup" th:value="${group.groupNumber}">
-      <input type="submit" th:value="${group.groupNumber}" class="group-button">
-    </form>
+<script th:inline="javascript">
+  window.ratingsData = /*[[${session.ratings}]]*/ [];
+  console.log('Ratings from session:', window.ratingsData);
+</script>
+<main id="content" class="container" role="main">
+  <div id="notification" class="notification" aria-live="polite" style="display: none;">
+    <span id="notification-message"></span>
+    <button class="close-btn" onclick="hideNotification()">×</button>
   </div>
+  <section id="grades-section" class="content-section" aria-label="Grades Section">
+    <div class="filters">
+      <label for="monthFilter" class="sr-only">Filter by Month</label>
+      <select id="monthFilter" name="month" aria-label="Select Month">
+        <option value="9" th:selected="${session.selectedMonth==9}">Սեպտեմբեր</option>
+        <option value="10" th:selected="${session.selectedMonth==10}">Հոկտեմբեր</option>
+        <option value="11" th:selected="${session.selectedMonth==11}">Նոյեմբեր</option>
+        <option value="12" th:selected="${session.selectedMonth==12}">Դեկտեմբեր</option>
+        <option value="1" th:selected="${session.selectedMonth==1}">Հունվար</option>
+        <option value="2" th:selected="${session.selectedMonth==2}">Փետրվար</option>
+        <option value="3" th:selected="${session.selectedMonth==3}">Մարտ</option>
+        <option value="4" th:selected="${session.selectedMonth==4}">Ապրիլ</option>
+        <option value="5" th:selected="${session.selectedMonth==5}">Մայիս</option>
+        <option value="6" th:selected="${session.selectedMonth==6}">Հունիս</option>
+      </select>
+      <label for="groupFilter" class="sr-only">Filter by Group</label>
+      <select id="groupFilter" name="group" aria-label="Select Group">
+        <option th:each="group : ${session.groups}"
+                th:value="${group.groupNumber}"
+                th:selected="${session.selectedGroup==group.groupNumber}"
+                th:text="${group.groupNumber}"></option>
+      </select>
+      <select id="subjectFilter" name="subject">
+        <option th:each="subject:${session.teacherSubjects}"
+                th:value="${subject.id}"
+                th:selected="${session.selectedSubject==subject.name}"
+                th:text="${subject.name}">
 
-  <table>
-    <thead>
-    <tr>
-      <th>Image</th>
-      <th>ID</th>
-      <th>Name</th>
-      <th>Surname</th>
-      <th>Group</th>
-      <th>Email</th>
-      <th>Math</th>
-      <th>English</th>
-      <th>Java</th>
-      <th>Update</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="st : ${session.subjects}">
-      <td><img th:src="@{'/images/' + ${st.student.image}}"></td>
-      <td th:text="${st.student.id}"></td>
-      <td th:text="${st.student.name}"></td>
-      <td th:text="${st.student.surname}"></td>
-      <td th:text="${st.student.groupInfo.groupNumber}"></td>
-      <td th:text="${st.student.email}"></td>
+        </option>
+      </select>
+    </div>
+    <div id="grades" class="grade-table">
+      <table role="grid" aria-label="Student Grades Table" id="gradesTable">
+        <thead>
+        <tr class="table-header">
+          <th scope="col" class="student-column sticky-column" data-sort="name" aria-sort="none">
+            <span>Աշակերտներ</span>
+            <button class="sort-btn" aria-label="Sort by Name"><i class="fas fa-sort"></i></button>
+          </th>
+          <th scope="col" th:each="schedule : ${session.scheduleWithDateList}" class="date-column" th:data-sort="${#dates.format(schedule.date, 'yyyy-MM-dd')}" aria-sort="none">
+            <span th:text="${#dates.format(schedule.date, 'd MMM, E')}" aria-label="Date"></span>
+            <button class="sort-btn" aria-label="Sort by Date"><i class="fas fa-sort"></i></button>
+          </th>
+        </tr>
+        </thead>
+        <tbody id="gradesBody">
+        <tr th:each="student : ${session.students}" class="grade-row" th:data-student-id="${student.id}">
+          <td class="student-column sticky-column" th:text="${student.name + ' ' + student.surname}"></td>
+          <td th:each="schedule : ${session.scheduleWithDateList}" class="grade-cell" th:data-date="${#dates.format(schedule.date, 'yyyy-MM-dd')}">
+          <span class="grade-value" th:each="rating : ${session.ratings}"
+                th:if="${rating.student.id == student.id && #dates.format(rating.date, 'yyyy-MM-dd') == #dates.format(schedule.date, 'yyyy-MM-dd')}"
+                th:text="${rating.rating}"
+                th:classappend="${rating.ratingType=='current'?'current':rating.ratingType=='written'?'written':'intermediate'}">
+          </span>
+            <button class="add-grade-btn"
+                    th:data-student-id="${student.id}"
+                    th:data-student-name="${student.name+' '+student.surname}"
+                    th:data-date="${#dates.format(schedule.date, 'yyyy-MM-dd')}"
+                    onclick="openGradePopupFromData(this)"
+                    aria-label="Add or Edit Grade">
+              <i class="fas fa-plus"></i>
+            </button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+      <!-- Հուշում -->
+      <div class="grade-legend">
+        <p>Գնահատականների տեսակներ:</p>
+        <ul>
+          <li class="legend-item current">Ընթացիկ</li>
+          <li class="legend-item written">Գրավոր աշխատանք</li>
+          <li class="legend-item intermediate">Միջանկյալ</li>
+        </ul>
+      </div>
+    </div>
+  </section>
 
-      <form action="/update" method="post">
-        <td>
-          <input type="text" name="mathValue" th:readonly="${session.subject != null && !session.subject.equals('math') ? 'true' : 'false'}" th:value="${st.math}" />
-        </td>
-        <td>
-          <input type="text" name="englishValue" th:readonly="${session.subject != null && !session.subject.equals('english') ? 'true' : 'false'}" th:value="${st.english}" />
-        </td>
-        <td>
-          <input type="text" name="javaValue" th:readonly="${session.subject != null && !session.subject.equals('java') ? 'true' : 'false'}" th:value="${st.java}" />
-        </td>
+  <!-- Assignments Section -->
+  <section id="assignments-section" class="content-section" style="display: none;" aria-label="Assignments Section">
+    <div class="assignment-controls">
+      <button onclick="showList('current')" class="assignment-btn active" aria-label="Current Homework">Ընթացիկ առաջադրանքներ</button>
+      <button onclick="showList('expired')" class="assignment-btn" aria-label="Expired Homework">Ժամկետանց առաջադրանքներ</button>
+      <button onclick="showList('unchecked')" class="assignment-btn" aria-label="Unchecked Exercises">Չստուգված վարժություններ</button>
+    </div>
 
-        <td>
-          <div class="action-buttons">
-            <input type="hidden" name="studentId" th:value="${st.student.id}">
-            <button type="submit" class="action-button update-button">Update</button>
+    <form action="/teacher/new-assignment" method="get">
+      <button type="submit" class="assignment-btn new-assignment-btn" aria-label="Add New Assignment">
+        <i class="fas fa-plus"></i> Նոր առաջադրանք
+      </button>
+    </form>
+
+    <div id="assignment-list" class="assignment-cards">
+      <!-- Current Homework Section -->
+      <div id="current-list" class="assignment-subsection" style="display: block;">
+        <th:block th:if="${session.currentHomeWorkList != null and not #lists.isEmpty(session.currentHomeWorkList)}">
+          <div class="assignment-card" th:each="item : ${session.currentHomeWorkList}">
+            <h3 th:text="${item.title} ?: 'Առանց վերնագրի'"></h3>
+            <p><strong>Առարկա:</strong> <span th:text="${item.subject != null} ? ${item.subject.name} : 'Չսահմանված'"></span></p>
+            <p><strong>Խումբ:</strong> <span th:text="${item.groupNumber != null} ? ${item.groupNumber} : 'Չսահմանված'"></span></p>
+            <p><strong>Տրված է:</strong> <span th:text="${#dates.format(item.inputDate, 'dd.MM.yyyy')}"></span></p>
+            <p><strong>Հանձնման ժամկետ:</strong> <span th:text="${#dates.format(item.expirationDate, 'dd.MM.yyyy')}"></span></p>
+            <div class="card-actions">
+              <form th:action="@{/task/{id}(id=${item.id})}" method="get">
+                <button type="submit" class="action-btn view-btn"><i class="fas fa-eye"></i> Դիտել</button>
+              </form>
+            </div>
           </div>
-        </td>
-      </form>
-    </tr>
-    </tbody>
-  </table>
+        </th:block>
+        <th:block th:unless="${session.currentHomeWorkList != null and not #lists.isEmpty(session.currentHomeWorkList)}">
+          <p class="no-items">Ընթացիկ առաջադրանքներ չկան</p>
+        </th:block>
+      </div>
 
-  <form action="/teacher/new/homework" method="get">
+      <!-- Expired Homework Section -->
+      <div id="expired-list" class="assignment-subsection" style="display: none;">
+        <th:block th:if="${session.expiredHomeWorkList != null and not #lists.isEmpty(session.expiredHomeWorkList)}">
+          <div class="assignment-card" th:each="item : ${session.expiredHomeWorkList}">
+            <h3 th:text="${item.title} ?: 'Առանց վերնագրի'"></h3>
+            <p><strong>Խումբ:</strong> <span th:text="${item.groupNumber != null} ? ${item.groupNumber} : 'Չսահմանված'"></span></p>
+            <p><strong>Վերջնաժամկետ:</strong> <span th:text="${#dates.format(item.expirationDate, 'dd.MM.yyyy')}"></span></p>
+            <div class="card-actions">
+              <form th:action="@{/task/{id}(id=${item.id})}" method="get">
+                <button type="submit" class="action-btn view-btn"><i class="fas fa-eye"></i> Դիտել</button>
+              </form>
+            </div>
+          </div>
+        </th:block>
+        <th:block th:unless="${session.expiredHomeWorkList != null and not #lists.isEmpty(session.expiredHomeWorkList)}">
+          <p class="no-items">Ժամկետանց առաջադրանքներ չկան</p>
+        </th:block>
+      </div>
 
-    <button class="homework">Add Homework</button>
+      <!-- Unchecked Exercises Section -->
+      <div id="unchecked-list" class="assignment-subsection" style="display: none;">
+        <th:block th:if="${session.uncheckedExercises != null and not #lists.isEmpty(session.uncheckedExercises)}">
+          <div class="assignment-card" th:each="item : ${session.uncheckedExercises}" th:data-id="${item.id}">
+            <h3 th:text="${item.homeWork.title} ?: 'Առանց վերնագրի'"></h3>
+            <p><strong>Հանձնման ժամկետ:</strong> <span th:text="${#dates.format(item.homeWork.expirationDate, 'dd.MM.yyyy')}"></span></p>
+            <p><strong>Մուտքագրման ամսաթիվ:</strong> <span th:text="${#dates.format(item.executionDate, 'dd.MM.yyyy')}"></span></p>
+            <p><strong>Խումբ:</strong> <span th:text="${item.homeWork.groupNumber != null} ? ${item.homeWork.groupNumber} : 'Չսահմանված'"></span></p>
+            <p><strong>Ուսանող:</strong> <span th:text="${item.student != null} ? ${item.student.name+' '+item.student.surname} : 'Չսահմանված'"></span></p>
+            <div class="card-actions">
+              <form th:action="@{/exercise-done/{id}(id=${item.id})}" method="get">
+                <button type="submit" class="action-btn view-btn"><i class="fas fa-eye"></i> Դիտել</button>
+              </form>
+              <button class="action-btn check-btn" th:data-id="${item.id}" onclick="checkExercise(this)"><i class="fas fa-check"></i> Նշել որպես ստուգված</button>
+            </div>
+          </div>
+        </th:block>
+        <th:block th:unless="${session.uncheckedExercises != null and not #lists.isEmpty(session.uncheckedExercises)}">
+          <p class="no-items">Չստուգված վարժություններ չկան</p>
+        </th:block>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- Summary Results Section -->
+  <section id="summary-results-section" class="content-section" style="display: none;" aria-label="Summary Results Section">
+    <h2 class="section-title">Ամփոփիչ Արդյունքներ        <span class="tooltip-icon" title="Նշված գնահատականները ձևավորվում են ավտոմատ կերպով՝ կախված ընթացիկ արդյունքներից և կարող են անընդհատ փոփոխվել">?</span>
+    </h2>
+    <div class="filters">
+      <label for="summaryGroupFilter" class="sr-only">Խումբ</label>
+      <select id="summaryGroupFilter" name="resultGroup" aria-label="Select Group">
+        <option th:each="group : ${session.groups}"
+                th:value="${group.groupNumber}"
+                th:selected="${session.selectedGroup == group.groupNumber}"
+                th:text="${group.groupNumber}"></option>
+      </select>
+      <label for="summarySubjectFilter" class="sr-only">Առարկա</label>
+      <select id="summarySubjectFilter" name="resultSubject" aria-label="Select Subject">
+        <option th:each="subject : ${session.teacherSubjects}"
+                th:value="${subject.id}"
+                th:selected="${session.selectedSubject == subject.name}"
+                th:text="${subject.name}"></option>
+      </select>
+    </div>
+    <div id="summary-results" class="summary-table">
+      <div th:if="${session.groupSummaries != null and not #lists.isEmpty(session.groupSummaries)}">
+        <table role="grid" aria-label="Summary Results Table" id="summaryResultsTable">
+          <thead>
+          <tr class="table-header">
+            <th scope="col" class="student-column sticky-column" data-sort="name" aria-sort="none">
+              <span>Աշակերտներ</span>
+              <button class="sort-btn" aria-label="Sort by Name"><i class="fas fa-sort"></i></button>
+            </th>
+            <th scope="col">1-ին Կիսամյակ</th>
+            <th scope="col">2-րդ Կիսամյակ</th>
+            <th scope="col">Ամփոփիչ Գնահատական</th>
+          </tr>
+          </thead>
+          <tbody id="summaryResultsBody">
+          <tr th:each="summary : ${session.groupSummaries}" class="summary-row" th:data-student-id="${summary.student.id}">
+            <td class="student-column sticky-column">
+              <div class="student-info">
+                <img class="student-pic"
+                     th:src="${summary.student.image} != null ? @{/images/{image}(image=${summary.student.image})} : @{/images/default.jpg}"
+                     alt="Student Profile Image"
+                     onerror="this.src='/images/default.jpg';" />
+                <div class="student-details">
+                  <span class="student-name" th:text="${summary.student.name + ' ' + summary.student.surname}"></span>
+                  <a class="email-btn"
+                     th:href="'mailto:' + ${summary.student.email}"
+                     aria-label="Send email to student">
+                    <i class="fas fa-envelope"></i>
+                  </a>
+                </div>
+              </div>
+            </td>
+            <td class="summary-grade"><span th:text="${summary.firstSemester}"></span></td>
+            <td class="summary-grade"><span th:text="${summary.secondSemester}"></span></td>
+            <td class="summary-grade final-grade"><span th:text="${summary.afterAll}"></span></td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+      <div th:unless="${session.groupSummaries != null and not #lists.isEmpty(session.groupSummaries)}" class="no-results">
+        <p>Ամփոփիչ արդյունքներ դեռ չկան</p>
+      </div>
+    </div>
+  </section>
+
+
+</main>
+
+<!-- Grade Popup -->
+<div class="overlay" id="overlay" aria-hidden="true"></div>
+<div class="popup" id="gradePopup" role="dialog" aria-labelledby="popupTitle" aria-hidden="true">
+  <h3 id="popupTitle">Գնահատական ավելացնել</h3>
+  <form id="gradeForm" method="post">
+    <input type="hidden" id="studentId" name="studentId">
+    <input type="hidden" id="subjectId" name="subjectId">
+    <div class="form-group">
+      <label for="gradeDate">Ամսաթիվ:</label>
+      <input type="text" id="gradeDate" name="date" readonly required>
+    </div>
+    <div class="form-group">
+      <label for="studentName">Աշակերտ:</label>
+      <input type="text" id="studentName" readonly required>
+    </div>
+    <div class="form-group">
+      <label for="lessonTopic">Դասի թեմա:</label>
+      <input type="text" id="lessonTopic" name="lessonTopic" required aria-required="true">
+    </div>
+    <div class="form-group">
+      <label for="gradeScore">Գնահատական:</label>
+      <input type="number" id="gradeScore" name="rating" min="0" max="10" required aria-required="true">
+    </div>
+    <div class="form-group">
+      <label for="gradeType">Տեսակ:</label>
+      <select id="gradeType" name="type" aria-label="Grade Type" required>
+        <option value="current">Ընթացիկ</option>
+        <option value="written">Գրավոր աշխատանք</option>
+        <option value="intermediate">Միջանկյալ</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="gradeComment">Մեկնաբանություն:</label>
+      <textarea id="gradeComment" name="comment" rows="3" required></textarea>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="popup-btn submit-btn">Հաստատել</button>
+      <button type="button" class="popup-btn cancel-btn" onclick="closePopup()">Չեղարկել</button>
+    </div>
   </form>
 </div>
+
+<script src="/js/teacherpageanimations.js"></script>
+<script src="/js/teacherNotificationsBar.js"></script>
 </body>
 </html>

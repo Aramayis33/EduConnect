@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="hy" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Կարգավորումներ - EduConnect</title>
+  <link rel="stylesheet" href="/css/studentCss.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="/css/studentsettings.css">
+  <link rel="stylesheet" href="/css/teacherNotificationNavBar.css">
+</head>
+<body>
+<!-- Header (Reused from Teacher Dashboard) -->
+<header class="header" role="banner">
+  <div class="logo" aria-label="EduConnect Logo">EduConnect</div>
+  <!-- Ծանուցումների նշան և dropdown -->
+  <div class="notifications-container">
+    <div class="notification-bell-wrapper">
+      <i class="fas fa-bell notification-bell"></i>
+      <span class="notification-count"
+            th:text="${teacherNotifications?.size()} ?: '0'"
+            th:style="${teacherNotifications?.size() == 0} ? 'display: none' : ''"></span>
+    </div>
+    <div class="notifications-dropdown">
+      <div th:if="${teacherNotifications != null and !teacherNotifications.isEmpty()}">
+        <div class="notification-item"
+             th:each="notification : ${teacherNotifications}"
+             th:data-notification-id="${notification.id}">
+          <i class="fas notification-icon"
+             th:classappend="${notification.messageType == 'admin'} ? 'fa-user-shield admin' : 'fa-cogs system'"></i>
+          <div class="notification-content">
+            <h4 th:text="${notification.messageTitle}"></h4>
+            <p th:text="${notification.messageText.length() > 50 ? notification.messageText.substring(0, 50) + '...' : notification.messageText}"></p>
+            <div class="notification-date"
+                 th:text="${#dates.format(notification.date, 'dd.MM.yyyy HH:mm')}"></div>
+          </div>
+        </div>
+        <a href="/teacher/notifications" class="view-all">Տեսնել բոլորը</a>
+      </div>
+      <div th:unless="${teacherNotifications != null and !teacherNotifications.isEmpty()}"
+           class="no-notifications">
+        Նոր ծանուցումներ չկան
+        <a href="/teacher/notifications" class="view-all">Տեսնել բոլորը</a>
+      </div>
+    </div>
+  </div>
+  <div class="profile" role="region" aria-label="User Profile">
+    <div class="profile-pic-container">
+      <img class="profile-pic"
+           th:src="${session.teacher.image} != null ? @{/images/{image}(image=${session.teacher.image})} : @{/images/default.jpg}"
+           alt="Profile Image"
+           onerror="this.src='/images/default.jpg';"/>
+      <div class="dropdown">
+        <div class="dropdown-content" role="menu">
+          <p th:text="'Անուն: ' + ${session.teacher.name} + ' ' + ${session.teacher.surname}"></p>
+          <p th:text="'Առարկա: ' + ${session.teacherSubjects.get(0).name}"></p>
+          <div class="dropdown-actions">
+            <form action="/assistant" method="post">
+              <button type="submit" class="profile-btn" aria-label="AI Assistant"><i
+                      class="fas fa-robot"></i> AI օգնական
+              </button>
+            </form>
+            <form action="/teacher/settings" method="post">
+              <button type="submit" class="settings-btn" aria-label="Settings"><i class="fas fa-cog"></i>
+                Կարգավորումներ
+              </button>
+            </form>
+            <form action="/logout-all" method="get">
+              <button type="submit" class="logOut-btn" aria-label="Logout"><i
+                      class="fas fa-sign-out-alt"></i> Ելք
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+<main class="container">
+  <section class="settings-container">
+    <button class="back-btn" onclick="window.location.href='/teacher'">
+      <i class="fas fa-arrow-left"></i> <span>Հետ Գլխավոր Էջ</span>
+    </button>
+    <h2>Կարգավորումներ</h2>
+
+    <div class="settings-form">
+      <!-- Հաշվի տվյալներ -->
+      <div class="form-section">
+        <h3>Հաշվի տվյալներ</h3>
+        <div class="form-group">
+          <label>Անուն:</label>
+          <p th:text="${session.teacher.name}"></p>
+        </div>
+        <div class="form-group">
+          <label>Ազգանուն:</label>
+          <p th:text="${session.teacher.surname}"></p>
+        </div>
+        <div class="form-group">
+          <label>Առարկաներ:</label>
+          <div class="subjects-list">
+            <th:block th:each="sub : ${session.teacherSubjects}">
+              <span class="subject-tag" th:text="${sub.name}"></span>
+            </th:block>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Էլ. փոստ:</label>
+          <p th:text="${session.teacher.email}"></p>
+          <button type="button" class="edit-btn" id="edit-email-btn">Փոխել էլ. փոստը</button>
+        </div>
+        <div class="form-group hidden" id="email-change-section">
+          <label for="new-email">Նոր էլ. փոստ:</label>
+          <input type="email" id="new-email" name="newEmail">
+          <button type="button" class="action-btn" id="send-verification-btn">Ուղարկել հաստատման կոդ</button>
+          <div class="hidden" id="verification-section">
+            <label for="verification-code">Հաստատման կոդ:</label>
+            <input type="text" id="verification-code" name="verificationCode">
+            <button type="button" class="action-btn" id="verify-email-btn">Հաստատել</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Գաղտնաբառի փոփոխություն -->
+      <div class="form-section">
+        <h3>Գաղտնաբառ</h3>
+        <button type="button" class="edit-btn" id="change-password-btn">Փոխել գաղտնաբառը</button>
+        <div class="form-group hidden" id="password-change-section">
+          <label for="old-password">Հին գաղտնաբառ:</label>
+          <div class="password-container">
+            <input type="password" id="old-password" name="oldPassword">
+            <button type="button" class="toggle-password" id="toggle-old-password">👁️</button>
+          </div>
+          <label for="new-password">Նոր գաղտնաբառ:</label>
+          <div class="password-container">
+            <input type="password" id="new-password" name="newPassword">
+            <button type="button" class="toggle-password" id="toggle-new-password">👁️</button>
+          </div>
+          <div class="password-requirements" id="password-requirements">
+            <ul>
+              <li id="req-length"><span class="icon"></span> Առնվազն 8 նիշ</li>
+              <li id="req-uppercase"><span class="icon"></span> Մեծատառ (A-Z)</li>
+              <li id="req-lowercase"><span class="icon"></span> Փոքրատառ (a-z)</li>
+              <li id="req-number"><span class="icon"></span> Թիվ (0-9)</li>
+              <li id="req-symbol"><span class="icon"></span> Հատուկ սիմվոլ (!@#$%^&*)</li>
+            </ul>
+          </div>
+          <label for="confirm-password">Հաստատել նոր գաղտնաբառ:</label>
+          <div class="password-container">
+            <input type="password" id="confirm-password" name="confirmPassword">
+            <button type="button" class="toggle-password" id="toggle-confirm-password">👁️</button>
+          </div>
+          <button type="button" class="action-btn" id="confirm-password-btn" disabled>Հաստատել</button>
+        </div>
+      </div>
+
+      <!-- Պրոֆիլի նկար -->
+      <div class="form-section">
+        <h3>Պրոֆիլի նկար</h3>
+        <div class="profile-image-container">
+          <img id="image-preview" th:src="${session.teacher.image} != null ? @{/images/{image}(image=${session.teacher.image})} : @{/images/default.jpg}" alt="img">
+          <button type="button" class="edit-image-btn" id="edit-image-btn"><i class="fas fa-pencil-alt"></i></button>
+        </div>
+        <div class="form-group hidden" id="image-edit-section">
+          <input type="file" id="profile-image" name="profileImage" accept="image/*">
+          <button type="button" class="action-btn" id="upload-image-btn">Հաստատել</button>
+          <button type="button" class="delete-btn" id="delete-image-btn">Ջնջել</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<div id="notification" class="notification hidden">
+  <span id="notification-message"></span>
+  <button id="close-notification">X</button>
+</div>
+<script src="/js/studentsettings.js"></script>
+<script src="/js/teacherNotificationsBar.js"></script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="hy" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="EduConnect - Teacher's Homework Details">
+    <title>Տնային Աշխատանք - EduConnect</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/homeworkView.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<!-- Header -->
+<header class="header">
+    <div class="logo">EduConnect</div>
+    <div class="profile">
+        <div class="profile-pic-container">
+            <img class="profile-pic"
+                 th:src="${session.teacher.image} != null ? @{/images/{image}(image=${session.teacher.image})} : @{/images/default.jpg}"
+                 alt="Profile Image"
+                 onerror="this.src='/images/default.jpg';" />
+            <div class="dropdown">
+                <div class="dropdown-content">
+                    <p th:text="'Անուն: ' + ${session.teacher.name} + ' ' + ${session.teacher.surname}"></p>
+                    <p th:text="'Առարկա: ' + ${session.teacherSubjects.get(0).name}"></p>
+                    <div class="dropdown-actions">
+                        <form action="/assistant" method="post"><button type="submit" class="profile-btn"><i class="fas fa-robot"></i> AI օգնական</button></form>
+                        <form action="/teacher/settings" method="post"><button type="submit" class="settings-btn"><i class="fas fa-cog"></i> Կարգավորումներ</button></form>
+                        <form action="/logout-all" method="get"><button type="submit" class="logOut-btn"><i class="fas fa-sign-out-alt"></i> Ելք</button></form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="main-container">
+    <div class="homework-container">
+        <div class="top-bar">
+            <button class="back-btn" onclick="window.location.href='/teacher'"><i class="fas fa-arrow-left"></i> Հետ</button>
+            <h1 th:text="${session.detailHomework.title}">Տնային Աշխատանք</h1>
+        </div>
+
+        <!-- Overview Section -->
+        <section class="overview-card">
+            <div class="description-section">
+                <h4>Նկարագրություն</h4>
+                <p class="description-text" th:text="${session.detailHomework.description != null ? session.detailHomework.description : 'Նկարագրություն չկա'}"></p>
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="label">Խումբ</span>
+                    <span th:text="${session.detailHomework.groupNumber}"></span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Առարկա</span>
+                    <span th:text="${session.detailHomework.subject.name}"></span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Ստեղծման Ամսաթիվ</span>
+                    <span th:text="${#dates.format(session.detailHomework.inputDate, 'dd.MM.yyyy')}"></span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Վերջնաժամկետ</span>
+                    <span th:text="${#dates.format(session.detailHomework.expirationDate, 'dd.MM.yyyy')}"></span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Պատասխան</span>
+                    <span th:text="${session.detailHomework.requiresResponse == 1 ? 'Պահանջվում է' : 'Չի պահանջվում'}"></span>
+                </div>
+            </div>
+            <!-- Files Section -->
+            <div class="files-section" th:if="${session.detailHomework.fileGroup != null and not #lists.isEmpty(session.detailHomework.fileGroup.files)}">
+                <h4>Կցված Ֆայլեր</h4>
+                <div class="file-list">
+                    <a th:each="file : ${session.detailHomework.fileGroup.files}"
+                       th:href="@{'/uploads/' + ${file.fileName}}"
+                       class="file-link"
+                       th:title="${file.fileName}"
+                       target="_blank">
+                        <i class="fas fa-file-download"></i> Դիտել ֆայլը
+
+                    </a>
+                </div>
+            </div>
+            <p class="no-files" th:if="${session.detailHomework.fileGroup == null or #lists.isEmpty(session.detailHomework.fileGroup.files)}">
+                Ֆայլեր չկան
+            </p>
+        </section>
+
+        <!-- Stats and Exercises -->
+        <div class="content-grid">
+            <section class="stats-card">
+                <h4>Կատարման Վիճակագրություն</h4>
+                <div class="chart-container">
+                    <canvas id="completionChart" width="140" height="140"></canvas>
+                </div>
+            </section>
+
+            <section class="exercises-card">
+                <h4>Հանձնված Առաջադրանքներ</h4>
+                <div class="exercise-list">
+                    <div class="exercise-card" th:each="exercise : ${session.exercisesForHomeWork}">
+                        <div class="exercise-info">
+                            <p class="student-name" th:text="${exercise.student.name} + ' ' + ${exercise.student.surname}"></p>
+                            <p class="answer-text" th:text="${exercise.answerText}"></p>
+                            <div class="meta-info">
+                                <span th:text="'Հանձնվել է: ' + ${#dates.format(exercise.executionDate, 'dd.MM.yyyy')}"></span>
+                                <span th:text="' | Ստուգված: ' + ${exercise.isChecked == 1 ? 'Այո' : 'Ոչ'}"></span>
+                            </div>
+                        </div>
+                        <a th:href="@{'/exercise-done/' + ${exercise.id}}" class="view-btn"><i class="fas fa-eye"></i> Դիտել</a>
+                    </div>
+                    <p class="no-data" th:if="${#lists.isEmpty(session.exercisesForHomeWork)}">Հանձնված առաջադրանքներ չկան</p>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+        const students = /*[[${session.students.size()}]]*/ 0;
+        const exercises = /*[[${session.exercisesForHomeWork.size()}]]*/ 0;
+        const completed = exercises;
+        const notCompleted = students - exercises > 0 ? students - exercises : 0;
+
+        const ctx = document.getElementById('completionChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Կատարված', 'Չկատարված'],
+                datasets: [{
+                    data: [completed, notCompleted],
+                    backgroundColor: ['#34c759', '#ff3b30'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { font: { size: 12 }, color: '#1e293b' }
+                    },
+                    tooltip: { enabled: true }
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>

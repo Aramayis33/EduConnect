@@ -1,55 +1,242 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title><!DOCTYPE html>
-        <html lang="en">
-        <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Feedback</title>
-    <link rel="stylesheet" href="/css/feedbackstyle.css">
-    <script src="/js/feedbackJs.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EduConnect - Հետադարձ կապ</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #e3f2fd;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: row;
+            width: 90%;
+            max-width: 1000px;
+            height: 80%;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .left-side {
+            flex: 1;
+            background: linear-gradient(135deg, #42a5f5, #90caf9);
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            position: relative;
+            clip-path: polygon(0 0, 100% 0, 75% 100%, 0% 100%);
+            animation: gradientShift 10s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background: linear-gradient(135deg, #42a5f5, #90caf9); }
+            50% { background: linear-gradient(135deg, #90caf9, #42a5f5); }
+            100% { background: linear-gradient(135deg, #42a5f5, #90caf9); }
+        }
+
+        .left-side::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="10" cy="20" r="3" fill="rgba(255,255,255,0.2)"/><circle cx="80" cy="30" r="5" fill="rgba(255,255,255,0.3)"/><circle cx="50" cy="80" r="4" fill="rgba(255,255,255,0.2)"/></svg>') repeat;
+            opacity: 0.1;
+        }
+
+        .left-side .logo {
+            width: 300px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        .right-side {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #ffffff;
+            padding: 40px;
+            position: relative;
+        }
+
+        .contact-box {
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        .contact-box h2 {
+            color: #42a5f5;
+            font-size: 28px;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .contact-box h2::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, #42a5f5, #90caf9);
+            border-radius: 2px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+            text-align: left;
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #333;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            background: #f9f9f9;
+        }
+
+        .input-field:focus {
+            border-color: #90caf9;
+            background: #ffffff;
+            box-shadow: 0 0 10px rgba(144, 202, 249, 0.3);
+            outline: none;
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, #42a5f5, #90caf9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-button:hover {
+            background: linear-gradient(90deg, #90caf9, #42a5f5);
+            box-shadow: 0 5px 15px rgba(144, 202, 249, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .submit-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .submit-button:hover::before {
+            left: 100%;
+        }
+
+        .error-message {
+            font-size: 12px;
+            color: #e57373;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        /* Անիմացիաներ */
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Ռեսպոնսիվ դիզայն */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                width: 95%;
+                height: auto;
+                border-radius: 15px;
+            }
+
+            .left-side {
+                clip-path: none;
+                padding: 30px 20px;
+                border-radius: 15px 15px 0 0;
+            }
+
+            .right-side {
+                padding: 30px 20px;
+            }
+
+            .left-side .logo {
+                width: 220px;
+            }
+
+            .contact-box h2 {
+                font-size: 22px;
+            }
+
+            .submit-button {
+                font-size: 15px;
+            }
+        }
+    </style>
 </head>
 <body>
-<header class="header">
-    <div class="logo">MyLogo</div>
-    <div class="profile">
-        <button class="profile-btn">AI Assistance</button>
-        <div class="profile-pic">
-            <img class="profile-pic" th:src="@{'/images/' + ${session.student.image}}" alt="Student Image">
-
+<div class="container">
+    <div class="left-side">
+        <img src="/images/educonnect_logo.png" alt="EduConnect Logo" class="logo" />
+    </div>
+    <div class="right-side">
+        <div class="contact-box">
+            <h2>Հետադարձ կապ</h2>
+            <form action="/feedback" method="POST" id="contactForm">
+                <div class="input-group">
+                    <label for="message">Հաղորդագրություն</label>
+                    <textarea id="message" class="input-field" name="message" placeholder="Ձեր հաղորդագրությունը" rows="5" required></textarea>
+                </div>
+                <button type="submit" class="submit-button">Ուղարկել</button>
+            </form>
         </div>
     </div>
-</header>
-<div>
-    <section class="feedback-section">
-        <h2 class="feedback-title">We'd Love Your Feedback!</h2>
-        <form action="/addFeedback" method="post">
-        <textarea name="title" class="feedback-textarea" placeholder="Write your feedback here..." oninput="updateCharCount()"></textarea>
-        <div class="character-counter">
-            <span id="charCount">0</span>/500 characters
-        </div>
-        <button type="submit" class="feedback-btn">Send</button>
-        </form>
-    </section>
-    <div class="emoji-rating">
-        <span class="emoji" data-rating="1" onclick="addEmoji('😞')">😞</span>
-        <span class="emoji" data-rating="2" onclick="addEmoji('😐')">😐</span>
-        <span class="emoji" data-rating="3" onclick="addEmoji('😊')">😊</span>
-        <span class="emoji" data-rating="4" onclick="addEmoji('😁')">😁</span>
-        <span class="emoji" data-rating="5" onclick="addEmoji('😍')">😍</span>
-    </div>
-
-
-
-</div>
-
-<div id="homewo">
-    <form action="/student" method="Post">
-        <button type="submit" class="profile-btn">Go Back</button>
-    </form>
-
 </div>
 </body>
 </html>

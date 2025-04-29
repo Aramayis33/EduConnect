@@ -6,4 +6,6 @@ public interface GroupRepository extends JpaRepository<GroupInfo, Integer> {
 
     GroupInfo findFirstByOrderByGroupNumber();
     GroupInfo findGroupByGroupNumber(int groupNumber);
+
+    GroupInfo findGroupById(int groupId);
 }
