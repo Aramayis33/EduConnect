@@ -1,0 +1,25 @@
+.admin-container {
+    background: #ffffff;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.admin-left-side {
+    background: linear-gradient(135deg, #1976d2, #64b5f6);
+    clip-path: polygon(0 0, 100% 0, 75% 100%, 0% 100%);
+    animation: gradientShiftAdmin 10s ease infinite;
+}
+
+@keyframes gradientShiftAdmin {
+    0% { background: linear-gradient(135deg, #1976d2, #64b5f6); }
+    50% { background: linear-gradient(135deg, #64b5f6, #1976d2); }
+    100% { background: linear-gradient(135deg, #1976d2, #64b5f6); }
+}
+
+.admin-login-button {
+    background: linear-gradient(90deg, #1976d2, #64b5f6);
+}
+
+.admin-login-button:hover {
+    background: linear-gradient(90deg, #64b5f6, #1976d2);
+    box-shadow: 0 5px 15px rgba(100, 181, 246, 0.4);
+}

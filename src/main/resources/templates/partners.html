@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="hy" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="EduConnect - Partners Page">
+    <title>EduConnect - Գործընկերներ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/partnersCss.css">
+    <link rel="stylesheet" href="/css/notificationbarStyle.css">
+    <link rel="stylesheet" href="/css/teacherpagestyle.css">
+</head>
+<body>
+<header class="header" role="banner">
+    <div class="logo" aria-label="EduConnect Logo">EduConnect</div>
+    <div class="notifications-container">
+        <div class="notification-bell-wrapper">
+            <i class="fas fa-bell notification-bell"></i>
+            <span class="notification-count"
+                  th:text="${teacherNotifications?.size()} ?: '0'"
+                  th:style="${teacherNotifications?.size() == 0} ? 'display: none' : ''"></span>
+        </div>
+        <div class="notifications-dropdown">
+            <div th:if="${teacherNotifications != null and !teacherNotifications.isEmpty()}">
+                <div class="notification-item"
+                     th:each="notification : ${teacherNotifications}"
+                     th:data-notification-id="${notification.id}">
+                    <i class="fas notification-icon"
+                       th:classappend="${notification.messageType == 'admin'} ? 'fa-user-shield admin' : 'fa-cogs system'"></i>
+                    <div class="notification-content">
+                        <h4 th:text="${notification.messageTitle}"></h4>
+                        <p th:text="${notification.messageText.length() > 50 ? notification.messageText.substring(0, 50) + '...' : notification.messageText}"></p>
+                        <div class="notification-date"
+                             th:text="${#dates.format(notification.date, 'dd.MM.yyyy HH:mm')}"></div>
+                    </div>
+                </div>
+                <a href="/teacher/notifications" class="view-all">Տեսնել բոլորը</a>
+            </div>
+            <div th:unless="${teacherNotifications != null and !teacherNotifications.isEmpty()}"
+                 class="no-notifications">
+                Նոր ծանուցումներ չկան
+                <a href="/teacher/notifications" class="view-all">Տեսնել բոլորը</a>
+            </div>
+        </div>
+    </div>
+    <div class="profile" role="region" aria-label="User Profile">
+        <div class="profile-pic-container">
+            <img class="profile-pic"
+                 th:src="${session.teacher.image} != null ? @{/images/{image}(image=${session.teacher.image})} : @{/images/default.jpg}"
+                 alt="Profile Image"
+                 onerror="this.src='/images/default.jpg';"/>
+            <div class="dropdown">
+                <div class="dropdown-content" role="menu">
+                    <p th:text="'Անուն: ' + ${session.teacher.name} + ' ' + ${session.teacher.surname}"></p>
+                    <p th:text="'Առարկա: ' + ${session.teacherSubjects.get(0).name}"></p>
+                    <div class="dropdown-actions">
+                        <form action="/assistant" method="post">
+                            <button type="submit" class="profile-btn" aria-label="AI Assistant"><i
+                                    class="fas fa-robot"></i> AI օգնական
+                            </button>
+                        </form>
+                        <form action="/teacher/settings" method="post">
+                            <button type="submit" class="settings-btn" aria-label="Settings"><i class="fas fa-cog"></i>
+                                Կարգավորումներ
+                            </button>
+                        </form>
+                        <form action="/logout-all" method="get">
+                            <button type="submit" class="logOut-btn" aria-label="Logout"><i
+                                    class="fas fa-sign-out-alt"></i> Ելք
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main id="content" class="container" role="main">
+    <section id="partners-section" class="partners-content" aria-label="Partners Section">
+        <button class="back-btn" onclick="window.location.href='/teacher'">
+            <i class="fas fa-arrow-left"></i> Հետ Գլխավոր Էջ
+        </button>
+        <h1 class="partners-title">Գործընկերներ</h1>
+        <div class="partners-grid">
+            <div class="partner-card" th:each="teacherWithSubjects : ${session.teachersWithSubjects}">
+                <div class="partner-image-container">
+                    <img class="partner-pic"
+                         th:src="${teacherWithSubjects.teacher.image} != null ? @{/images/{image}(image=${teacherWithSubjects.teacher.image})} : @{/images/default.jpg}"
+                         alt="Teacher Profile Image"
+                         onerror="this.src='/images/default.jpg';"/>
+                </div>
+                <div class="partner-info">
+                    <h3 class="partner-name">
+   <span th:if="${teacherWithSubjects.teacher.deletedAt != null}"
+         th:class="teacher-deleted"
+         th:text="${teacherWithSubjects.teacher.surname} + ' (Հեռացված)'"></span>
+                        <span th:unless="${teacherWithSubjects.teacher.deletedAt != null}"
+                              th:text="${teacherWithSubjects.teacher.surname}"></span>
+                        <span
+                            th:if="${teacherWithSubjects.teacher.id == session.teacher.id}"
+                            class="self-indicator">(Ես)</span>
+                    </h3>
+                    <div class="subjects-list">
+                        <span class="subject-item" th:each="subject : ${teacherWithSubjects.subjectsList}"
+                              th:text="${subject.name}"></span>
+                    </div>
+                    <a th:unless="${teacherWithSubjects.teacher.id == session.teacher.id}"
+                       class="email-partner-btn"
+                       th:href="'mailto:' + ${teacherWithSubjects.teacher.email}"
+                       aria-label="Send email to teacher">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div th:unless="${session.teachersWithSubjects != null and not #lists.isEmpty(session.teachersWithSubjects)}"
+             class="no-partners">
+            <p>Գործընկերներ դեռ չկան</p>
+        </div>
+    </section>
+</main>
+
+<script src="/js/teacherpageanimations.js"></script>
+<script src="/js/teacherNotificationsBar.js"></script>
+</body>
+</html>

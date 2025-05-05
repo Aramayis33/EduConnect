@@ -7,6 +7,7 @@ import java.util.List;
 
 @Service
 public class UserService {
+
     @Autowired
     private AdminRepository adminRepository;
 
@@ -15,4 +16,12 @@ public class UserService {
         return adminRepository.findUser(login, password);
 
     }
+    Admin findUserByUsername(String username){
+        return adminRepository.findAdminByUsername(username);
+    }
+
+    public void save(Admin admin){
+        adminRepository.save(admin);
+    }
+
 }

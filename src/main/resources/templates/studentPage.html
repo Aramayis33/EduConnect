@@ -1,84 +1,354 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="hy" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Page</title>
+    <title>Հաշվետու - EduConnect</title>
     <link rel="stylesheet" href="/css/studentCss.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/notificationbarStyle.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-...your-integrity-hash..." crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
 <header class="header">
-    <div class="logo">MyLogo</div>
+    <div class="logo">EduConnect</div>
     <nav class="nav-buttons">
-        <button onclick="showGrades()" class="nav-btn">Grades</button>
-        <button onclick="showAssignments()" class="nav-btn">Assignments</button>
-        <form action="/faq" method="post">
-        <button type="submit" class="nav-btn">Wanted Questions</button>
-        </form>
-        <form action="/feedback" method="get">
-        <button type="submit" class="nav-btn">Feedback</button>
-        </form>
+        <button onclick="showGrades()" class="nav-btn">Գնահատականներ</button>
+        <button onclick="showAssignments()" class="nav-btn">Առաջադրանքներ</button>
+        <button onclick="showSummaryResults()" class="nav-btn">Ամփոփիչ արդյունք</button>
+        <div class="dropdown-nav">
+            <button class="nav-btn">Իմ խումբը <i class="fas fa-caret-down"></i></button>
+            <div class="dropdown-content-nav">
+                <button onclick="showMyGroup()">Կուրսեցիներ</button>
+                <form action="/student/schedule" method="GET">
+                    <button type="submit">Դասացուցակ</button>
+                </form>
+            </div>
+        </div>
+        <div class="dropdown-nav">
+            <button class="nav-btn">Ուսումնական<i class="fas fa-caret-down"></i></button>
+            <div class="dropdown-content-nav">
+                <form action="/library" method="GET">
+                    <button type="submit">Գրադարան</button>
+                </form>
+                <form action="/videoLessons" method="GET">
+                    <button type="submit">Վիդեոդասեր</button>
+                </form>
+            </div>
+        </div>
     </nav>
     <div class="profile">
-        <div class="profile-pic-container">
-            <img class="profile-pic" th:src="@{'/images/' + ${session.student.image}}" alt="Student Image">
-            <div class="dropdown">
-                <div class="dropdown-content">
-                    <p style="color:black" th:text="'Name: ' + ${session.student.name} + ' ' + ${session.student.surname}"></p>
-                    <p style="color:black" th:text="'Group: ' + ${session.student.groupInfo.groupNumber}"></p>
+        <!-- Ծանուցումների նշան և dropdown -->
+        <div class="notifications-container">
+            <div class="notification-bell-wrapper">
+                <i class="fas fa-bell notification-bell"></i>
+                <span class="notification-count"
+                      th:text="${studentNotification?.size()} ?: '0'"
+                      th:style="${studentNotification?.size() == 0} ? 'display: none' : ''"></span>
+            </div>
+            <div class="notifications-dropdown">
+                <div th:if="${studentNotification != null and !studentNotification.isEmpty()}">
+                    <div class="notification-item"
+                         th:each="notification : ${studentNotification}"
+                         th:data-notification-id="${notification.id}">
+                        <i class="fas notification-icon"
+                           th:classappend="${notification.messageType == 'admin'} ? 'fa-user-shield admin' : 'fa-cogs system'"></i>
+                        <div class="notification-content">
+                            <h4 th:text="${notification.messageTitle}"></h4>
+                            <p th:text="${notification.messageText.length() > 50 ? notification.messageText.substring(0, 50) + '...' : notification.messageText}"></p>
+                            <div class="notification-date"
+                                 th:text="${#dates.format(notification.date, 'dd.MM.yyyy HH:mm')}"></div>
+                        </div>
+                    </div>
+                    <a href="/student/notifications" class="view-all">Տեսնել բոլորը</a>
+                </div>
+                <div th:unless="${studentNotification != null and !studentNotification.isEmpty()}"
+                     class="no-notifications">
+                    Նոր ծանուցումներ չկան
+                    <a href="/student/notifications" class="view-all">Տեսնել բոլորը</a>
                 </div>
             </div>
         </div>
-        <a href="https://chatgpt.com/" target="_blank"><button class="profile-btn">AI Assistance</button></a>
-        <form action="/logout" method="get">
-            <button class="logOut-btn">Log Out</button>
-        </form>
+        <!-- Գոյություն ունեցող profile նկար -->
+        <div class="profile-pic-container">
+            <img class="profile-pic" th:src="${session.student.image} != null ? @{/images/{image}(image=${session.student.image})} : @{/images/default.jpg}"
+                 th:alt="'Profile Image'"
+                 onerror="this.onerror=null; this.src='/images/default.jpg';" />
+            <div class="dropdown">
+                <div class="dropdown-content">
+                    <p th:text="'Անուն: ' + ${session.student.name} + ' ' + ${session.student.surname}"></p>
+                    <p th:text="'Խումբ: ' + ${session.student.groupInfo.groupNumber}"></p>
+                    <div class="dropdown-actions">
+                        <form action="/assistant" method="post">
+                            <button type="submit" class="profile-btn">
+                                <i class="fas fa-robot"></i> AI օգնական
+                            </button>
+                        </form>
+                        <form action="/student/settings" method="post">
+                            <button type="submit" class="settings-btn">
+                                <i class="fas fa-cog"></i> Կարգավորումներ
+                            </button>
+                        </form>
+                        <form action="/feedback" method="get"><button type="submit" class="feedback-btn" aria-label="Settings"><i class="fas fa-comment"></i> Հետադարձ կապ</button></form>
+
+                        <form action="/logout-all" method="get">
+                            <button type="submit" class="logOut-btn">
+                                <i class="fas fa-sign-out-alt"></i> Ելք
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </header>
 
-<div id="gradesContainer" class="grades-container" style="display: block;">
-    <h2>Grades</h2>
-    <table>
-        <thead>
-        <tr>
-            <th>Math</th>
-            <th>English</th>
-            <th>Java</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td th:text="${session.subject.math}"></td>
-            <td th:text="${session.subject.english}"></td>
-            <td th:text="${session.subject.java}"></td>
-        </tr>
-        </tbody>
-    </table>
-</div>
-
-<div id="assignmentsContainer" class="assignments-container" style="display: none;">
-    <h2>Assignments</h2>
-    <div th:each="assignment : ${session.homeWorks}">
-        <div class="card">
-            <h3 th:text="${assignment.subject}"></h3>
-
-            <p><strong>Deadline:</strong> <span th:text="${assignment.inputDate}"></span></p>
-            <p><strong>Title:</strong> <span th:text="${assignment.title}"></span></p>
-            <p class="duration">Time Left: 1 day</p>
+<main class="container">
+    <section id="gradesContainer" class="grades-container" style="display: none;">
+        <h2>Գնահատականներ</h2>
+        <div class="filters">
+            <label for="subjectSelect">Ընտրել առարկան:</label>
+            <select id="subjectSelect" onchange="filterGrades()">
+                <option value="all">Բոլորը</option>
+                <option th:each="subject : ${session.subjectsForSearch}"
+                        th:value="${subject.name.toLowerCase}"
+                        th:text="${subject.name}"></option>
+            </select>
+            <label for="startDate">Սկսած:</label>
+            <input type="date" id="startDate" onchange="filterGrades()">
+            <label for="endDate">Մինչև:</label>
+            <input type="date" id="endDate" onchange="filterGrades()">
+            <label for="rowsPerPage">Տողեր մեկ էջում:</label>
+            <select id="rowsPerPage" onchange="filterGrades()">
+                <option value="2" selected>2</option>
+                <option value="3">3</option>
+            </select>
         </div>
-    </div>
-</div>
+        <div class="grades-table">
+            <table>
+                <thead>
+                <tr>
+                    <th>Առարկա</th>
+                    <th>Գնահատական</th>
+                    <th>Դասախոս</th>
+                    <th>Թեմա</th>
+                    <th>Ամսաթիվ</th>
+                    <th>Մեկնաբանություն</th>
+                </tr>
+                </thead>
+                <tbody id="gradesBody">
+                <tr th:each="rating : ${session.ratings}" th:data-rating-type="${rating.ratingType}">
+                    <td th:text="${rating.subject.name}"></td>
+                    <td>
+                        <span th:if="${rating.rating == 0}" class="absent-grade">Բ</span>
+                        <span th:unless="${rating.rating == 0}" th:text="${rating.rating}"></span>
+                    </td>
+                    <td>
+                    <span th:if="${rating.teacher.deletedAt != null}"
+                          th:class="teacher-deleted"
+                          th:text="${rating.teacher.surname} + ' (Հեռացված)'"></span>
+                        <span th:unless="${rating.teacher.deletedAt != null}"
+                              th:text="${rating.teacher.surname}"></span>
+                    </td>
+                    <td th:text="${rating.topic}"></td>
+                    <td th:text="${rating.date}"></td>
+                    <td th:text="${rating.comment}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination">
+            <button id="prevPage" onclick="changePage(-1)">Նախորդ</button>
+            <span id="pageInfo"></span>
+            <button id="nextPage" onclick="changePage(1)">Հաջորդ</button>
+        </div>
+        <div class="grade-legend">
+            <h5>Հուշում</h5>
+            <p><span class="legend-color current"></span> Ընթացիկ գնահատական</p>
+            <p><span class="legend-color written"></span> Գրավոր աշխատանք</p>
+            <p><span class="legend-color intermediate"></span> Միջանկյալ գնահատական</p>
+            <p><span class="legend-color absent"></span> Բացակա (Բ)</p>
+        </div>
+    </section>
+    <section id="assignmentsContainer" class="assignments-container" style="display: none;">
+        <h2>Առաջադրանքներ</h2>
+        <div class="tab-container">
+            <button class="tab-btn active" onclick="showTab('activeTab')">Ընթացիկ</button>
+            <button class="tab-btn" onclick="showTab('historyTab')">Պատմություն</button>
+        </div>
 
-<script>
-    function showGrades() {
-        document.getElementById("gradesContainer").style.display = 'block';
-        document.getElementById("assignmentsContainer").style.display = 'none';
-    }
+        <!-- Active Homework Tab -->
+        <div id="activeTab" class="tab-content" style="display: block;">
+            <div class="filters">
+                <label for="startDateActive">Սկսած:</label>
+                <input type="date" id="startDateActive" onchange="filterActiveAssignments()">
+                <label for="endDateActive">Մինչև:</label>
+                <input type="date" id="endDateActive" onchange="filterActiveAssignments()">
+            </div>
+            <div class="assignments-list">
+                <div class="card" th:each="assignment : ${session.activeHomeworks}">
+                    <div class="card-header">
+                        <h3 th:text="${assignment.title}"></h3>
+                        <span class="subject" th:text="${assignment.subject.name}"></span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Ուսուցիչ:</strong>    <span th:if="${assignment.teacher.deletedAt != null}"
+                                                               th:class="teacher-deleted"
+                                                               th:text="${assignment.teacher.surname} + ' (Հեռացված)'"></span>
+                            <span th:unless="${assignment.teacher.deletedAt != null}"
+                                  th:text="${assignment.teacher.surname}"></span></p>
+                        <p><strong>Տրվել է:</strong> <span th:text="${#dates.format(assignment.inputDate, 'dd.MM.yyyy')}"></span></p>
+                        <p><strong>Վերջնաժամկետ:</strong> <span th:text="${#dates.format(assignment.expirationDate, 'dd.MM.yyyy')}"></span></p>
+                        <p class="description"><strong>Նկարագրություն:</strong> <span class="description-text" th:text="${assignment.description != null ? assignment.description : 'Հասանելի նկարագրություն չկա'}"></span></p>
+                    </div>
+                    <div class="card-footer">
+                        <!-- Files Section -->
+                        <div class="files-section" th:if="${assignment.fileGroup != null and not #lists.isEmpty(assignment.fileGroup.files)}">
+                            <h4>Կցված ֆայլեր</h4>
+                            <div class="file-list">
+                                <a th:each="file : ${assignment.fileGroup.files}"
+                                   th:href="'/uploads/' + ${file.fileName}"
+                                   target="_blank"
+                                   class="file-link"
+                                   th:title="${file.fileName}">
+                                    <i class="fas fa-file-download"></i> Բեռնել
+                                </a>
+                            </div>
+                        </div>
+                        <p class="no-files" th:unless="${assignment.fileGroup != null and not #lists.isEmpty(assignment.fileGroup.files)}">
+                            Ֆայլեր չկան
+                        </p>
+                        <!-- Buttons -->
+                        <div class="action-buttons">
+                            <div th:if="${assignment.requiresResponse == 1}">
+                                <form action="/exercise" method="post">
+                                    <input type="hidden" name="stId" th:value="${session.student.id}">
+                                    <input type="hidden" name="homeworkId" th:value="${assignment.id}">
+                                    <button type="submit" class="assignment-btn">
+                                        <i class="fas fa-check"></i> Կատարել
+                                    </button>
+                                </form>
+                            </div>
+                            <div th:unless="${assignment.requiresResponse == 1}" class="no-response">
+                                <span>Պատասխան չի պահանջվում</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div th:if="${#lists.isEmpty(session.activeHomeworks)}" class="no-data">
+                    <p><i class="fas fa-info-circle"></i> Ընթացիկ առաջադրանքներ չկան</p>
+                </div>
+            </div>
+        </div>
 
-    function showAssignments() {
-        document.getElementById("assignmentsContainer").style.display = 'block';
-        document.getElementById("gradesContainer").style.display = 'none';
-    }
-</script>
+        <!-- Expired Homework Tab (History) -->
+        <div id="historyTab" class="tab-content" style="display: none;">
+            <div class="filters">
+                <label for="startDateHistory">Սկսած:</label>
+                <input type="date" id="startDateHistory" onchange="filterHistoryAssignments()">
+                <label for="endDateHistory">Մինչև:</label>
+                <input type="date" id="endDateHistory" onchange="filterHistoryAssignments()">
+            </div>
+            <div class="assignments-list">
+                <div class="card expired" th:each="assignment : ${session.expiredHomeworks}">
+                    <div class="card-header">
+                        <h3 th:text="${assignment.title}"></h3>
+                        <span class="subject" th:text="${assignment.subject.name}"></span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Տրվել է:</strong> <span th:text="${#dates.format(assignment.inputDate, 'dd.MM.yyyy')}"></span></p>
+                        <p><strong>Ժամկետը:</strong> <span th:text="${#dates.format(assignment.expirationDate, 'dd.MM.yyyy')}"></span></p>
+                        <p class="description"><strong>Նկարագրություն:</strong> <span class="description-text" th:text="${assignment.description != null ? assignment.description : 'Հասանելի նկարագրություն չկա'}"></span></p>
+                    </div>
+                </div>
+                <div th:if="${#lists.isEmpty(session.expiredHomeworks)}" class="no-data">
+                    <p><i class="fas fa-info-circle"></i> Ժամկետն անցած առաջադրանքներ չկան</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="summaryContainer" class="summary-container" style="display: none;">
+        <div class="summary-header">
+            <h2>Ամփոփիչ արդյունքներ</h2>
+            <span class="tooltip-icon" title="Նշված գնահատականները ձևավորվում են ավտոմատ կերպով՝ կախված ընթացիկ արդյունքներից և կարող են անընդհատ փոփոխվել">?</span>
+        </div>
+        <div class="summary-table">
+            <table>
+                <thead>
+                <tr>
+                    <th>Առարկա</th>
+                    <th>Կիսամյակ 1</th>
+                    <th>Կիսամյակ 2</th>
+                    <th>Ամփոփիչ</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="entry : ${session.summary}">
+                    <td th:text="${entry.subject.name}"></td>
+                    <td th:text="${entry.firstSemester} == 0 ? '-' : ${entry.firstSemester}"></td>
+                    <td th:text="${entry.secondSemester} == 0 ? '-' : ${entry.secondSemester}"></td>
+                    <td th:text="${entry.afterAll} == 0 ? '-' : ${entry.afterAll}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="status-section">
+            <h3>Ընդհանուր կարգավիճակ</h3>
+            <div class="status-badge"
+                 th:classappend="${session.status == 'Անբավարար' ? 'fail' :
+                              session.status == 'Բավարար' ? 'pass' :
+                              session.status == 'Հարվածային' ? 'good' :
+                              session.status == 'Գերազանցիկ' ? 'excellent' : 'no-data'}"
+                 th:text="${session.status != null ? session.status : 'Տվյալներ չկան'}">
+                <i th:remove="tag"
+                   th:class="${session.status == 'Անբավարար' ? 'fas fa-exclamation-triangle' :
+                          session.status == 'Բավարար' ? 'fas fa-check' :
+                          session.status == 'Հարվածային' ? 'fas fa-heart' :
+                          session.status == 'Գերազանցիկ' ? 'fas fa-crown' : 'fas fa-question'}"
+                   th:title="${session.status == 'Անբավարար' ? 'Միջինը 4-ից ցածր է' :
+                          session.status == 'Բավարար' ? 'Միջինը ճիշտ 4 է' :
+                          session.status == 'Հարվածային' ? 'Միջինը 4-ից բարձր, բայց 9-ից ցածր' :
+                          session.status == 'Գերազանցիկ' ? 'Միջինը 9 կամ ավելի է' : 'Գնահատականներ դեռ չկան'}"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- Նոր բաժին՝ Համակուրսեցիներ -->
+    <section id="groupMatesContainer" class="group-mates-container" style="display: none;">
+        <h2>Համակուրսեցիներ</h2>
+        <div class="group-mates-wrapper">
+            <div class="mate-card" th:each="groupMate : ${session.groupStudents}">
+                <div class="mate-avatar">
+                    <img class="mate-pic" th:src="${groupMate.image} != null ? @{/images/{image}(image=${groupMate.image})} : @{/images/default.jpg}"
+                         th:alt="'Profile Image'"
+                         onerror="this.onerror=null; this.src='/images/default.jpg';" />
+                </div>
+                <div class="mate-details">
+                    <h3>
+                        <span th:text="${groupMate.name} + ' ' + ${groupMate.surname}"></span>
+                        <span th:if="${groupMate.id == session.student.id}" class="current-user">(Ես)</span>
+                    </h3>
+                    <div class="mate-info">
+                        <p><i class="fas fa-envelope"></i> <span th:text="${groupMate.email} ?: 'Հասանելի չէ'"></span></p>
+                        <p><i class="fas fa-users"></i> <span th:text="${groupMate.groupInfo.groupNumber}"></span></p>
+                        <p><i class="fas fa-birthday-cake"></i> <span th:text="${groupMate.birthDay} ?: 'Հասանելի չէ'"></span></p>
+                    </div>
+                </div>
+                <a th:href="'mailto:' + ${groupMate.email}"
+                   th:if="${groupMate.email != null and groupMate.id != session.student.id}"
+                   class="email-action"
+                   title="Ուղարկել նամակ">
+                    <i class="fas fa-envelope-open-text"></i>
+                </a>
+            </div>
+            <div th:if="${#lists.isEmpty(session.groupStudents)}" class="no-data">
+                <p><i class="fas fa-info-circle"></i> Համակուրսեցիներ չկան:</p>
+            </div>
+        </div>
+    </section>
+
+</main>
+<script src="/js/studentPage.js"></script>
+<script src="/js/notificationsBarJs.js"></script>
 </body>
 </html>

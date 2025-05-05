@@ -1,54 +1,206 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="hy" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Registration Update</title>
-    <link rel="stylesheet" href="/css/teacherUpdate.css">
+    <title>Դասատուի մանրամասներ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/updateStudent.css">
 </head>
 <body>
 <div class="container">
+    <header>
+        <h1>EduAdmin - Դասատուի տվյալներ</h1>
+        <button class="back-btn" onclick="window.location.href='/admin/teachers'">← Վերադառնալ</button>
+    </header>
 
-    <div class="title">Admin Update<h4>for Teacher </h4></div>
-    <div class="content">
-        <link>
+    <!-- Profile Card -->
+    <div class="profile-card">
+        <div class="profile-image">
+            <img th:src="'/images/' + ${viewTeacher.image} ?: '/images/default.jpg'" alt="Դասատուի նկար">
+        </div>
+        <div class="profile-info">
+            <h2 th:text="${viewTeacher.name} + ' ' + ${viewTeacher.surname}"></h2>
+            <p><strong>Էլ. փոստ:</strong> <span th:text="${viewTeacher.email}"></span></p>
+            <p><strong>Կարգավիճակ:</strong> <span th:text="${viewTeacher.isActivated == 1 ? 'Ակտիվացված' : 'Չակտիվացված'}"></span></p>
+            <p><strong>Բլոկավորված:</strong> <span th:text="${viewTeacher.isBlocked == 0 ? 'Ոչ' : 'Այո'}"></span></p>
+            <p><strong>Առարկաներ:</strong>
+                <th:block th:each="subjects : ${subjectHours}">
+                    <span th:text="${subjects.key + ': ' + subjects.value + ' ժամ | '}"></span>
+                </th:block>
+            </p>
 
-        <form action="/addTeacherSubmit" method="post">
-            <div class="user-details">
+            <button class="edit-btn" onclick="openEditModal()">✏️ Խմբագրել</button>
+            <button class="delete-btn" onclick="openDeleteModal()">🗑️ Հեռացնել</button>
+        </div>
+    </div>
 
-                <div class="input-box">
-                    <span class="details">Name</span>
-                    <input type="text" name="teName" placeholder="Update name" th:value="${teacherUpdate.name}" required>
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('details')">Հիմնական տվյալներ</button>
+        <button class="tab-btn" onclick="showTab('loginHistory')">Մուտքերի պատմություն</button>
+<!--        <button class="tab-btn" onclick="showTab('summaryResults')">Խմբեր</button>-->
+        <button class="tab-btn" onclick="showTab('feedbacks')">Հետադարձ կապ</button>
+    </div>
+
+    <!-- Tab Content -->
+    <div id="details" class="tab-content active">
+        <table class="details-table">
+            <tr><th>Անուն</th><td th:text="${viewTeacher.name}"></td></tr>
+            <tr><th>Ազգանուն</th><td th:text="${viewTeacher.surname}"></td></tr>
+            <tr><th>Էլ. փոստ</th><td th:text="${viewTeacher.email}"></td></tr>
+            <tr><th>Խմբեր</th>
+                <td>
+                    <th:block th:each="group : ${teacherGroups}">
+                        <span th:text="${group.group.groupNumber} + ' ; '"></span>
+                    </th:block>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="loginHistory" class="tab-content">
+        <table class="details-table">
+            <thead>
+            <tr>
+                <th>IP Հասցե</th>
+                <th>Սարքավորում</th>
+                <th>Մուտքի ժամանակ</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="login : ${logInHistories}">
+                <td th:text="${login.ipAddress}"></td>
+                <td th:text="${login.userAgent}"></td>
+                <td th:text="${#dates.format(login.loginTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(logInHistories)}">
+                <td colspan="3">Մուտքերի պատմություն չկա</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+<!--    <div id= "summaryResults" class="tab-content">-->
+<!--        <table class="details-table">-->
+<!--            <thead>-->
+<!--            <tr>-->
+<!--                <th>Խումբ</th>-->
+<!--                <th>Առարկա</th>-->
+<!--                <th>Գործողություններ</th>-->
+<!--            </tr>-->
+<!--            </thead>-->
+<!--            <tbody>-->
+<!--            <tr th:each="group : ${teacherGroups}">-->
+<!--                <td th:text="${group.group.groupNumber} ?: 'N/A'"></td>-->
+<!--                <td th:text="${group.subject.name} ?: 'N/A'"></td>-->
+<!--                <td>-->
+<!--                    <button type="button" th:onclick="'deleteGroup(' + ${group.id} + ')'">Հեռացնել</button>-->
+<!--                </td>-->
+<!--            </tr>-->
+<!--            <tr th:if="${#lists.isEmpty(teacherGroups)}">-->
+<!--                <td colspan="3">Խմբեր չկան</td>-->
+<!--            </tr>-->
+<!--            </tbody>-->
+<!--        </table>-->
+<!--    </div>-->
+
+    <div id="feedbacks" class="tab-content">
+        <table class="details-table">
+            <thead>
+            <tr>
+                <th>Ամսաթիվ</th>
+                <th>Մեկնաբանություն</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="feedback : ${feedbacks}">
+                <td th:text="${#dates.format(feedback.date, 'yyyy-MM-dd')}"></td>
+                <td th:text="${feedback.comment}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(feedbacks)}">
+                <td colspan="2">Հետադարձ կապ չկա</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeDeleteModal()">×</span>
+            <h3>Հաստատեք գործողությունը</h3>
+            <p>Համոզված ե՞ք, որ ցանկանում եք հեռացնել դասատու <strong th:text="${viewTeacher.name} + ' ' + ${viewTeacher.surname}"></strong>-ին համակարգից: Հեռացնելու դեպքում դուք պետք է խմբագրեք դասացուցակը</p>
+            <form id="deleteForm" action="/admin/teachers/delete" method="POST">
+                <input type="hidden" name="id" th:value="${viewTeacher.id}">
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" onclick="closeDeleteModal()">Չեղարկել</button>
+                    <button type="submit" class="confirm-delete-btn">Հաստատել</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeEditModal()">×</span>
+            <h3>Խմբագրել դասատուի տվյալները</h3>
+            <form id="editForm" action="/admin/teachers/update" method="POST">
+                <input type="hidden" id="editId" name="id" th:value="${viewTeacher.id}">
+                <div class="form-group">
+                    <label for="editName">Անուն</label>
+                    <input type="text" id="editName" name="name" th:value="${viewTeacher.name}" required>
+                </div>
+                <div class="form-group">
+                    <label for="editSurname">Ազգանուն</label>
+                    <input type="text" id="editSurname" name="surname" th:value="${viewTeacher.surname}" required>
+                </div>
+                <div class="form-group">
+                    <label for="editEmail">Էլ. փոստ</label>
+                    <input type="email" id="editEmail" name="email" th:value="${viewTeacher.email}" required>
                 </div>
 
-                <div class="input-box">
-                    <span class="details">Surname</span>
-                    <input type="text" th:value="${teacherUpdate.surname}" name="teSurname" placeholder="Update surname" required>
+                <!-- Ընթացիկ առարկաներ -->
+                <div class="form-group">
+                    <label>Ընթացիկ առարկաներ</label>
+                    <table class="details-table">
+                        <thead>
+                        <tr>
+                            <th>Առարկայի անուն</th>
+                            <th>Գործողություն</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="subject : ${teacherSubjects}">
+                            <td th:text="${subject.name} ?: 'N/A'"></td>
+                            <td>
+                                <button type="button" th:onclick="|removeSubject(${subject.id},${viewTeacher.id})|">Հեռացնել</button>                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(teacherSubjects)}">
+                            <td colspan="2">Առարկաներ չկան</td>
+                        </tr>
+                        </tbody>
+                    </table>
                 </div>
 
-                <div class="input-box">
-                    <span class="details">Username</span>
-                    <input type="text" th:value="${teacherUpdate.username}" name="teUsername"  placeholder="Update username" required>
+                <!-- Նոր առարկա ավելացնել -->
+                <div class="form-group">
+                    <label for="newSubjectId">Ավելացնել նոր առարկա</label>
+                    <select name="newSubjectId" id="newSubjectId">
+                        <option value="">Ընտրեք առարկա</option>
+                        <option th:each="subject : ${allSubjects}"
+                                th:value="${subject.id}"
+                                th:text="${subject.name}"></option>
+                    </select>
                 </div>
 
-                <div class="input-box">
-                    <span class="details">Subject Name</span>
-                    <input type="text" th:value="${teacherUpdate.subject}" name="teSubject" placeholder="Update the subject name" required>
-
-                    <input type="hidden" name="oldPassword" th:value="${teacherUpdate.password}">
-                    <input type="hidden" name="tePassword" th:value="${teacherUpdate.password}">
-                    <input type="hidden" name="teId" th:value="${teacherUpdate.id}">
-
-                </div>
-
-            </div>
-
-
-            <div class="button">
-                <input type="submit" value="Update">
-            </div>
-        </form>
+                <button type="submit" class="submit-btn">Հաստատել</button>
+            </form>
+        </div>
     </div>
 </div>
+
+<script src="/js/updateTeacher.js"></script>
 </body>
 </html>

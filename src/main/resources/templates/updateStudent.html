@@ -1,60 +1,178 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr" xmlns:th="http://www.thymeleaf.org">
+<html lang="hy" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Registration Update</title>
+  <title>Ուսանողի մանրամասներ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/updateStudent.css">
 </head>
 <body>
 <div class="container">
-  <div class="title">Admin Update<h4>for Students </h4></div>
-  <div class="content">
-    <form action="/addStudentSubmit" method="post" th:object="${student}" enctype="multipart/form-data">
-      <div class="user-details">
-        <div class="input-box">
-          <span class="details">Name</span>
-          <input type="text" name="stName" th:value="${studentUpdate.name}" th:field="*{name}" placeholder="Update your name" required>
+  <!-- Header -->
+  <header>
+    <h1>EduAdmin - Ուսանողի տվյալներ</h1>
+    <button class="back-btn" onclick="window.location.href='/admin/students'">← Վերադառնալ</button>
+  </header>
+
+  <!-- Profile Card -->
+  <div class="profile-card">
+    <div class="profile-image">
+      <img th:src="'/images/'+${session.viewStudent.image} ?: '/images/default.jpg'" alt="Ուսանողի նկար">
+    </div>
+    <div class="profile-info">
+      <h2 th:text="${session.viewStudent.name} + ' ' + ${session.viewStudent.surname}"></h2>
+      <p><strong>Խումբ:</strong> <span th:text="${session.viewStudent.groupInfo?.groupNumber} ?: 'N/A'"></span></p>
+      <p><strong>Էլ. փոստ:</strong> <span th:text="${session.viewStudent.email}"></span></p>
+      <p><strong>Կարգավիճակ:</strong> <span th:text="${session.viewStudent.isActivated == 1 ? 'Ակտիվացված' : 'Չշահագործվող'}"></span></p>
+      <p><strong>Բլոկավորված:</strong> <span th:text="${session.viewStudent.isBlocked == 0 ? 'Ոչ' : 'Այո'}"></span></p>
+      <p><strong>Բացակա:</strong> <span th:text="${session.absentCount} +' Ժամ'"></span></p>
+
+      <button class="edit-btn" onclick="openEditModal()">✏️ Խմբագրել</button>
+      <button class="delete-btn" onclick="openDeleteModal()">🗑️ Հեռացնել</button>
+
+
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('details')">Հիմնական տվյալներ</button>
+    <button class="tab-btn" onclick="showTab('loginHistory')">Մուտքերի պատմություն</button>
+    <button class="tab-btn" onclick="showTab('summaryResults')">Գնահատականներ</button>
+    <button class="tab-btn" onclick="showTab('feedbacks')">Հետադարձ կապ</button>
+  </div>
+
+  <!-- Tab Content -->
+  <div id="details" class="tab-content active">
+    <table class="details-table">
+      <tr><th>Անուն</th><td th:text="${session.viewStudent.name}"></td></tr>
+      <tr><th>Ազգանուն</th><td th:text="${session.viewStudent.surname}"></td></tr>
+      <tr><th>Ծննդյան ամսաթիվ</th><td th:text="${#dates.format(session.viewStudent.birthDay, 'yyyy-MM-dd')}"></td></tr>
+      <tr><th>Էլ. փոստ</th><td th:text="${session.viewStudent.email}"></td></tr>
+      <tr><th>Վարձավճար</th><td th:text="${session.viewStudent.fee}"></td></tr>
+      <tr><th>Խումբ</th><td th:text="${session.viewStudent.groupInfo?.groupNumber} ?: 'N/A'"></td></tr>
+    </table>
+  </div>
+
+  <div id="loginHistory" class="tab-content">
+    <table class="details-table">
+      <thead>
+      <tr>
+        <th>IP Հասցե</th>
+        <th>Սարքավորում</th>
+        <th>Մուտքի ժամանակ</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="login : ${session.logInHistories}">
+        <td th:text="${login.ipAddress}"></td>
+        <td th:text="${login.userAgent}"></td>
+        <td th:text="${#dates.format(login.loginTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeDeleteModal()">×</span>
+      <h3>Հաստատեք գործողությունը</h3>
+      <p>Համոզված ե՞ք, որ ցանկանում եք հեռացնել ուսանող <strong th:text="${session.viewStudent.name} + ' ' + ${session.viewStudent.surname}"></strong>-ին համակարգից՝ ներառյալ նրա հետ առնչվող ողջ տեղեկատվությունը </p>
+      <form id="deleteForm" action="/admin/students/delete" method="POST">
+        <input type="hidden" name="id" th:value="${session.viewStudent.id}">
+        <div class="modal-actions">
+          <button type="button" class="cancel-btn" onclick="closeDeleteModal()">Չեղարկել</button>
+          <button type="submit" class="confirm-delete-btn">Հաստատել</button>
         </div>
-        <div class="input-box">
-          <span class="details">Surname</span>
-          <input type="text" name="stSurname" th:value="${studentUpdate.surname}" th:field="*{surname}" placeholder="Update your surname" required>
+      </form>
+    </div>
+  </div>
+
+  <div id="summaryResults" class="tab-content">
+    <table class="details-table">
+      <thead>
+      <tr>
+        <th>Առարկա</th>
+        <th>Խումբ</th>
+        <th>Առաջին կիսամյակ</th>
+        <th>Երկրորդ կիսամյակ</th>
+        <th>Ընդհանուր</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="summary : ${session.summaryResults}">
+        <td th:text="${summary.subject?.name} ?: 'N/A'"></td>
+        <td th:text="${summary.group?.groupNumber} ?: 'N/A'"></td>
+        <td th:text="${summary.firstSemester}"></td>
+        <td th:text="${summary.secondSemester}"></td>
+        <td th:text="${summary.afterAll}"></td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="feedbacks" class="tab-content">
+    <table class="details-table">
+      <thead>
+      <tr>
+        <th>Ամսաթիվ</th>
+        <th>Մեկնաբանություն</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="feedback : ${session.feedbacks}">
+        <td th:text="${#dates.format(feedback.date, 'yyyy-MM-dd')}"></td>
+        <td th:text="${feedback.comment}"></td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeEditModal()">×</span>
+      <h3>Խմբագրել ուսանողի տվյալները</h3>
+      <form id="editForm" onsubmit="updateStudent(event)">
+        <input type="hidden" id="editId" name="id" th:value="${session.viewStudent.id}">
+        <div class="form-group">
+          <label for="editName">Անուն</label>
+          <input type="text" id="editName" name="name" th:value="${session.viewStudent.name}" required>
         </div>
-        <div class="input-box">
-          <span class="details">Email</span>
-          <input type="email" name="stEmail" th:value="${studentUpdate.email}" th:field="*{email}" placeholder="Update your email" required>
+        <div class="form-group">
+          <label for="editSurname">Ազգանուն</label>
+          <input type="text" id="editSurname" name="surname" th:value="${session.viewStudent.surname}" required>
         </div>
-        <div class="input-box">
-          <span class="details">Group Number</span>
-          <select name="stGroup" th:field="*{groupInfo}"  >
-            <th:block th:each="group:${allGroups}" >
-              <option th:text="${group.groupNumber}" th:value="${group.id}" th:selected="${group.id==studentUpdate.groupInfo.id}"/>
-            </th:block>
+        <div class="form-group">
+          <label for="editBirthDay">Ծննդյան ամսաթիվ</label>
+          <input type="date" id="editBirthDay" name="birthDay" th:value="${#dates.format(session.viewStudent.birthDay, 'yyyy-MM-dd')}" required>
+        </div>
+        <div class="form-group">
+          <label for="editEmail">Էլ. փոստ</label>
+          <input type="email" id="editEmail" name="email" th:value="${session.viewStudent.email}" required>
+        </div>
+        <div class="form-group">
+          <label for="editFee">Վարձավճար</label>
+          <input type="number" id="editFee" name="fee" th:value="${session.viewStudent.fee}" required min="0">
+        </div>
+        <div class="form-group">
+          <label for="editGroupId">Խումբ</label>
+          <select id="editGroupId" name="groupId" required>
+            <option value="">Ընտրեք խումբ</option>
+            <option th:each="group : ${session.allGroups}"
+                    th:value="${group.id}"
+                    th:text="${group.groupNumber}"
+                    th:selected="${group.id == session.viewStudent.groupInfo?.id}"></option>
           </select>
         </div>
-        <div class="input-box">
-          <span class="details">Fee</span>
-          <input type="number" name="stFee" th:field="*{fee}" th:value="${studentUpdate.fee}" placeholder="Update the fee amount" required>
-        </div>
-        <div class="input-box">
-          <span class="details">Birthday</span>
-          <input type="date" name="stDate" th:field="*{birthDay}" th:value="${studentUpdate.birthDay}" required>
-        </div>
-
-      </div>
-      <div class="photo-upload">
-        <label for="photo">Change Photo</label>
-        <input type="file" id="photo" name="photo"  accept="image/*">
-        <img th:src="@{'/images/'+${studentUpdate.image}}" style="width: 80px;height: 80px">
-      </div>
-      <div class="button">
-        <input type="hidden" th:field="*{password}" name="stPassword" th:value="${studentUpdate.password}">
-        <input type="hidden" name="stId" th:value="${studentUpdate.id}" th:field="*{id}">
-        <input type="submit" value="Update">
-        <input type="hidden" name="image" th:value="${studentUpdate.image}">
-      </div>
-    </form>
+        <button type="submit" class="submit-btn">Հաստատել</button>
+      </form>
+    </div>
   </div>
 </div>
+
+<script src="/js/updateStudent.js"></script>
 </body>
 </html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="hy" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Դասացուցակ - EduConnect</title>
+    <link rel="stylesheet" href="/css/studentCss.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="/css/schedulestyle.css">
+    <link rel="stylesheet" href="/css/notificationbarStyle.css">
+</head>
+<body>
+<header class="header">
+    <div class="logo">EduConnect</div>
+<!--    <nav class="nav-buttons">-->
+<!--        <button onclick="window.location.href='/student'" class="nav-btn">Գնահատականներ</button>-->
+<!--        <button onclick="window.location.href='/student#assignmentsContainer'" class="nav-btn">Առաջադրանքներ</button>-->
+<!--        <button onclick="window.location.href='/student#summaryContainer'" class="nav-btn">Ամփոփիչ արդյունք</button>-->
+<!--        <div class="dropdown-nav">-->
+<!--            <button class="nav-btn">Իմ խումբը <i class="fas fa-caret-down"></i></button>-->
+<!--            <div class="dropdown-content-nav">-->
+<!--                <button onclick="window.location.href='/student#groupMatesContainer'">Կուրսեցիներ</button>-->
+<!--                <button onclick="window.location.href='/student/schedule'">Դասացուցակ</button>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </nav>-->
+    <div class="profile">
+
+        <!-- Ծանուցումների նշան և dropdown -->
+        <div class="notifications-container">
+            <div class="notification-bell-wrapper">
+                <i class="fas fa-bell notification-bell"></i>
+                <span class="notification-count"
+                      th:text="${studentNotifications?.size()} ?: '0'"
+                      th:style="${studentNotifications?.size() == 0} ? 'display: none' : ''"></span>
+            </div>
+            <div class="notifications-dropdown">
+                <div th:if="${studentNotifications != null and !studentNotifications.isEmpty()}">
+                    <div class="notification-item"
+                         th:each="notification : ${studentNotifications}"
+                         th:data-notification-id="${notification.id}">
+                        <i class="fas notification-icon"
+                           th:classappend="${notification.messageType == 'admin'} ? 'fa-user-shield admin' : 'fa-cogs system'"></i>
+                        <div class="notification-content">
+                            <h4 th:text="${notification.messageTitle}"></h4>
+                            <p th:text="${notification.messageText.length() > 50 ? notification.messageText.substring(0, 50) + '...' : notification.messageText}"></p>
+                            <div class="notification-date"
+                                 th:text="${#dates.format(notification.date, 'dd.MM.yyyy HH:mm')}"></div>
+                        </div>
+                    </div>
+                    <a href="/student/notifications" class="view-all">Տեսնել բոլորը</a>
+                </div>
+                <div th:unless="${studentNotifications != null and !studentNotifications.isEmpty()}"
+                     class="no-notifications">
+                    Նոր ծանուցումներ չկան
+                    <a href="/student/notifications" class="view-all">Տեսնել բոլորը</a>
+                </div>
+            </div>
+        <div class="profile-pic-container">
+            <img class="profile-pic" th:src="${session.student.image} != null ? @{/images/{image}(image=${session.student.image})} : @{/images/default.jpg}"
+                 th:alt="'Profile Image'"
+                 onerror="this.onerror=null; this.src='/images/default.jpg';" />
+            <div class="dropdown">
+                <div class="dropdown-content">
+                    <p th:text="'Անուն: ' + ${session.student.name} + ' ' + ${session.student.surname}"></p>
+                    <p th:text="'Խումբ: ' + ${session.student.groupInfo.groupNumber}"></p>
+                    <div class="dropdown-actions">
+                        <form action="/assistant" method="post">
+                            <button type="submit" class="profile-btn">
+                                <i class="fas fa-robot"></i> AI օգնական
+                            </button>
+                        </form>
+                        <form action="/student/settings" method="post">
+                            <button type="submit" class="settings-btn">
+                                <i class="fas fa-cog"></i> Կարգավորումներ
+                            </button>
+                        </form>
+                        <form action="/logout-all" method="get">
+                            <button type="submit" class="logOut-btn">
+                                <i class="fas fa-sign-out-alt"></i> Ելք
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <section class="schedule-container">
+        <button class="back-btn" onclick="window.location.href='/student'">
+            <i class="fas fa-arrow-left"></i> Հետ Գլխավոր Էջ
+        </button>
+        <h2>Դասացուցակ</h2>
+        <form th:action="@{/student/schedule}" method="get" class="filters">
+            <label for="semester">Ընտրեք կիսամյակը:</label>
+            <select name="semester" id="semester" onchange="this.form.submit()">
+                <option value="1" th:selected="${selectedSemester == 1}">Առաջին կիսամյակ</option>
+                <option value="2" th:selected="${selectedSemester == 2}">Երկրորդ կիսամյակ</option>
+            </select>
+            <label for="semesterPart">Ընտրեք մոդուլը:</label>
+            <select name="semesterPart" id="semesterPart" onchange="this.form.submit()">
+                <option value="first" th:selected="${selectedSemesterPart == 'first'}">Առաջին հատված</option>
+                <option value="second" th:selected="${selectedSemesterPart == 'second'}">Երկրորդ հատված</option>
+            </select>
+        </form>
+
+        <div class="schedule-table-wrapper">
+            <table class="schedule-table">
+                <thead>
+                <tr>
+                    <th>Ժամ</th>
+                    <th>Երկուշաբթի</th>
+                    <th>Երեքշաբթի</th>
+                    <th>Չորեքշաբթի</th>
+                    <th>Հինգշաբթի</th>
+                    <th>Ուրբաթ</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="hour : ${#numbers.sequence(1, 6)}">
+                    <td th:text="${hour}"></td>
+                    <td th:each="day : ${#numbers.sequence(1, 5)}">
+                        <div class="schedule-cell">
+                            <th:block th:each="schedule : ${schedules}">
+                                <div th:if="${schedule.classHour == hour and schedule.weekday == day}" class="schedule-item">
+                                    <div class="subject" th:text="${schedule.subject.name}"></div>
+                                    <div class="teacher">   <span th:if="${schedule.teacher.deletedAt != null}"
+                                                                  th:class="teacher-deleted"
+                                                                  th:text="${schedule.teacher.surname} + ' (Հեռացված)'"></span>
+                                        <span th:unless="${schedule.teacher.deletedAt != null}"
+                                              th:text="${schedule.teacher.surname}"></span></div>
+                                    <div class="classroom" th:text="${schedule.classroom}"></div>
+                                </div>
+                            </th:block>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<script src="/js/notificationsBarJs.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="hy" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Ուսանողներ</title>
+  <link rel="stylesheet" href="/css/adminPageStyle.css" />
+  <link rel="stylesheet" href="/css/adminStudentStyle.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<!-- Navigation -->
+<nav class="nav">
+  <div class="nav-header">
+    <h1>EduConnect</h1>
+    <span th:text="${session.admin.name} ?: 'Ադմին'"></span>
+  </div>
+  <ul>
+    <li><a th:classappend="${activePage == 'home' ? 'active' : ''}" href="/admin/home">🏠 Գլխավոր</a></li>
+    <li><a th:classappend="${activePage == 'students' ? 'active' : ''}" href="/admin/students">🎓 Ուսանողներ</a></li>
+    <li><a th:classappend="${activePage == 'teachers' ? 'active' : ''}" href="/admin/teachers">👩‍🏫 Դասախոսներ</a></li>
+    <li><a th:classappend="${activePage == 'groups' ? 'active' : ''}" href="/admin/groups">🧑‍🤝‍🧑 Խմբեր</a></li>
+    <li><a th:classappend="${activePage == 'subjects' ? 'active' : ''}" href="/admin/subjects">📚 Առարկաներ</a></li>
+    <li><a th:classappend="${activePage == 'schedule' ? 'active' : ''}" href="/admin/schedule">🗓️ Դասացուցակ</a></li>
+    <li><a th:classappend="${activePage == 'library' ? 'active' : ''}" href="/admin/library">📖 Գրադարան</a></li>
+    <li><a th:classappend="${activePage == 'videos' ? 'active' : ''}" href="/admin/videos">🎥 Վիդեոդասեր</a></li>
+    <li><a th:classappend="${activePage == 'admins' ? 'active' : ''}" href="/admin/admins">🛠️ Ադմիններ</a></li>
+    <li><a th:classappend="${activePage == 'events' ? 'active' : ''}" href="/admin/events">🔔 Իրադարձություններ</a></li>    <li><a href="/admin/logout" class="logout">🚪 Ելք</a></li>
+  </ul>
+</nav>
+
+<!-- Main Content -->
+<main class="content">
+  <!-- Header (Banner) -->
+  <section class="banner">
+    <div class="banner-content">
+      <div class="banner-title">
+        <h2>🎓 Ուսանողներ</h2>
+        <span class="count-label">Ընդհանուր՝ <strong th:text="${session.studentCount} ?: '0'"></strong></span>
+      </div>
+      <div class="banner-actions">
+        <button class="banner-btn" onclick="openAddStudentModal()">+ Ավելացնել ուսանող</button>
+      </div>
+    </div>
+    <div class="filters">
+      <div class="filter-item search-container">
+        <input type="text" id="searchInput" placeholder="🔍 Որոնել..." oninput="filterStudents()">
+      </div>
+      <div class="filter-item">
+        <label for="groupFilter">Խումբ</label>
+        <select id="groupFilter" onchange="filterStudents()">
+          <option value="">Բոլոր խմբերը</option>
+          <option th:each="group : ${session.allGroups}" th:value="${group.id}" th:text="${group.groupNumber}"></option>
+        </select>
+      </div>
+      <div class="filter-item">
+        <label for="statusFilter">Կարգավիճակ</label>
+        <select id="statusFilter" onchange="filterStudents()">
+          <option value="">Բոլորը</option>
+          <option value="1">Բլոկավորված</option>
+          <option value="0">Ակտիվ</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- Students List -->
+  <section class="students-list">
+    <div class="table-header">
+      <h3>Ուսանողների ցուցակ</h3>
+<!--      <span class="table-count" th:text="'Գտնվել է: ' + ${session.allStudents?.size()} + ' ուսանող'"></span>-->
+    </div>
+    <div class="table-wrapper">
+      <table id="studentsTable">
+        <thead>
+        <tr>
+          <th>Անուն</th>
+          <th>Ազգանուն</th>
+          <th>Խումբ</th>
+          <th>Էլ. փոստ</th>
+          <th>Կարգավիճակ</th>
+          <th>Գործողություններ</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="student : ${session.allStudents}" th:attr="data-group-id=${student.groupInfo?.id}" class="student-row">
+          <td th:text="${student.name}"></td>
+          <td th:text="${student.surname}"></td>
+          <td th:text="${student.groupInfo?.groupNumber} ?: ''"></td>
+          <td th:text="${student.email}"></td>
+          <td>
+            <label class="switch">
+              <input type="checkbox" th:checked="${student.isBlocked == 0}"
+                     th:attr="data-id=${student.id}" onchange="toggleActivation(this)">
+              <span class="slider round"></span>
+            </label>
+          </td>
+          <td>
+            <form th:action="'/admin/students/'+${student.id}" method="get">
+            <button class="action-btn edit-btn" type="submit">✏️ Փոփոխել</button>
+            </form>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Add Student Modal -->
+  <div id="addStudentModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeAddStudentModal()">&times;</span>
+      <h3>Ավելացնել նոր ուսանող</h3>
+      <form id="addStudentForm" onsubmit="createStudent(event)">
+        <div class="form-group">
+          <label for="name">Անուն</label>
+          <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+          <label for="surname">Ազգանուն</label>
+          <input type="text" id="surname" name="surname" required>
+        </div>
+        <div class="form-group">
+          <label for="birthDay">Ծննդյան ամսաթիվ</label>
+          <input type="date" id="birthDay" name="birthDay" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Էլ. փոստ</label>
+          <input type="email" id="email" name="email" required>
+          <p style="color: red; font-size: 12px;">Համոզված եղեք, որ մուտքագրված էլ․ փոստը գործում է ու պատկանում է ուսանողին</p>
+        </div>
+        <div class="form-group">
+          <label for="fee">Վարձավճար</label>
+          <input type="number" id="fee" name="fee" required min="0">
+        </div>
+        <div class="form-group">
+          <label for="groupId">Խումբ</label>
+          <select id="groupId" name="groupId" required>
+            <option value="">Ընտրեք խումբ</option>
+            <option th:each="group : ${session.allGroups}" th:value="${group.id}" th:text="${group.groupNumber}"></option>
+          </select>
+        </div>
+        <button type="submit" class="submit-btn">Հաստատել</button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<script th:src="@{/js/adminStudent.js}"></script>
+</body>
+</html>
