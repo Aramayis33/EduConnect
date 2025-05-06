@@ -31,17 +31,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import javax.security.auth.Subject;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 public class TeacherController {
@@ -204,30 +203,45 @@ public class TeacherController {
 
     @PostMapping("/search-emis")
     public String searchEmis(@RequestParam("group") String group, @RequestParam("month") String month, @RequestParam("subject") String subject) {
+
         int monthSelected = Integer.parseInt(month);
         int groupSelected = Integer.parseInt(group);
         int subjectSelected = Integer.parseInt(subject);
         Teacher teacher = (Teacher) session.getAttribute("teacher");
+//        if(teacher==null) {
+//            return "redirect:/";
+//        }
+
         List<GroupInfo> groups = scheduleRepository.findTeacherGroupsFromSchedule(teacher);
         session.setAttribute("groups", groups);
+
         GroupInfo groupInfo = groupRepository.findGroupByGroupNumber(groupSelected);
         List<Student> students = studentRepository.findStudentsByGroupInfo(groupInfo);
         session.setAttribute("students", students);
         int semesterNum = scheduleService.getSemesterByMonth(monthSelected);
+//        List<Schedule> schedules = scheduleRepository.findSchedulesByTeacherAndGroupAndSemester(teacher, groupInfo, semesterNum); // Ենթադրում եմ, semesterPart-ը կարող է null լինել
         String semesterPart = scheduleService.getSemesterPartByMonthAndSemester(monthSelected, semesterNum);
         Subjects subjects = subjectRepository.findSubjectById(subjectSelected);
-        List<Schedule> schedules = scheduleRepository.findSchedulesByTeacherAndGroupAndSemesterAndSemesterPartAndSubject(teacher, groupInfo,
-                semesterNum,
-                semesterPart, subjects);
+
+
+        List<Schedule> schedules = scheduleRepository.findSchedulesByTeacherAndGroupAndSemesterAndSemesterPartAndSubject(teacher, groupInfo, semesterNum, semesterPart, subjects);
         List<ScheduleWithDate> scheduleWithDateList = scheduleService.findSchedulesWithDates(schedules, monthSelected);
         List<Rating> ratingList = ratingRepository.findRatingsByTeacherAndSemester(teacher, semesterNum);
+
         session.setAttribute("ratings", ratingList);
         session.setAttribute("students", students);
         session.setAttribute("scheduleWithDateList", scheduleWithDateList);
+
         session.setAttribute("selectedMonth", monthSelected);
         session.setAttribute("selectedGroup", groupSelected);
+        System.out.println(ratingList);
+        System.out.println(students);
+        System.out.println(scheduleWithDateList);
+
+
         return "redirect:/teacher";
     }
+
 
 
     @PostMapping("/group-results")
