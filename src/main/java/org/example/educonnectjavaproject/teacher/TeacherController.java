@@ -257,13 +257,57 @@ public class TeacherController {
     public String addRating(@RequestParam("date") Date date,
                             @RequestParam("studentId") int stId,
                             @RequestParam("lessonTopic") String topic,
-                            @RequestParam("rating") int rating,
+                            @RequestParam("rating") String rat,
                             @RequestParam("type") String gradeType,
                             @RequestParam("comment") String comment,
-                            @RequestParam("subjectId") int subjectId) {
+                            @RequestParam("subjectId") String subjId) {
         Student student = studentRepository.findStudentById(stId);
         Teacher teacher = (Teacher) session.getAttribute("teacher");
         int isPresent = 1;
+        int rating=0;
+        int subjectId=0;
+        try{
+            subjectId=Integer.parseInt(subjId);
+        }
+        catch (Exception e){
+            return "redirect:/teacher";
+        }
+        Subjects subjects = subjectRepository.findSubjectById(subjectId);
+        try{
+            rating=Integer.parseInt(rat);
+        }
+        catch (Exception e){
+            Rating foundRating = ratingRepository.findRatingByTeacherAndStudentAndDate(teacher, student, date);
+            if(foundRating!=null){
+                ratingRepository.delete(foundRating);
+                Double firstSemester = ratingRepository.findFirstSemesterAverageRatingByStudentAndSubject(student, subjects);
+                Double secondSemester = ratingRepository.findSecondSemesterAverageRatingByStudentAndSubject(student, subjects);
+
+                double firstSemValue = (firstSemester != null) ? firstSemester : 0.0;
+                double secondSemValue = (secondSemester != null) ? secondSemester : 0.0;
+                double afterAll;
+
+                if (firstSemValue == 0 || secondSemValue == 0) {
+                    afterAll = firstSemValue + secondSemValue;
+                } else {
+                    afterAll = (firstSemValue + secondSemValue) / 2;
+                }
+                afterAll=Math.round(afterAll);
+
+                SummaryResult result = summaryResultRepository.findSummaryResultByStudentAndSubject(student, subjects);
+                if (result != null) {
+                    result.setFirstSemester(firstSemValue);
+                    result.setSecondSemester(secondSemValue);
+                    result.setAfterAll(afterAll);
+                    summaryResultRepository.save(result);
+                } else {
+                    result = new SummaryResult(student, subjects, student.getGroupInfo(), firstSemValue, secondSemValue, afterAll);
+                    summaryResultRepository.save(result);
+                }
+            }
+            return "redirect:/teacher";
+        }
+
         if (rating == 0) {
             isPresent = 0;
         }
@@ -271,7 +315,6 @@ public class TeacherController {
         int semester = scheduleService.getSemesterByMonth(month);
 //        System.out.println(subject);
 //        int subjectId=Integer.parseInt(subject);
-        Subjects subjects = subjectRepository.findSubjectById(subjectId);
         System.out.println("sa subjectn e axper jan " + subjects.getName());
 
         Rating foundRating = ratingRepository.findRatingByTeacherAndStudentAndDate(teacher, student, date);

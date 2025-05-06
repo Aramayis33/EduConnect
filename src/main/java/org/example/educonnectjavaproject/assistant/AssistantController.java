@@ -53,9 +53,9 @@ public class AssistantController {
                 }]
               }],
               "generationConfig": {
-                "maxOutputTokens": 500,
-                "temperature": 0.7,
-                "topP": 0.9
+                "maxOutputTokens": 1000,
+                "temperature": 0.1,
+                "topP": 0.1
               }
             }
             """.formatted(fullPrompt);
