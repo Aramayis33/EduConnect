@@ -20,7 +20,7 @@ public class NotificationCleanUpService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    @Scheduled(cron = "0  0 0 * * ?")
+    @Scheduled(cron = "0 0 0 * * ?")
     @Transactional
     public void cleanupOldNotifications() {
         try {
@@ -28,7 +28,17 @@ public class NotificationCleanUpService {
 
             LocalDate fiveDaysAgo = LocalDate.now().minusDays(5);
             Timestamp fiveDaysAgoTimestamp = Timestamp.from(fiveDaysAgo.atStartOfDay(ZoneId.systemDefault()).toInstant());
-            logger.debug("Deleting notifications older than: {}", fiveDaysAgoTimestamp);
+            logger.debug("Deleting notifications and readings older than: {}", fiveDaysAgoTimestamp);
+
+            int deletedStudentReadings = entityManager.createQuery(
+                            "DELETE FROM StudentNotificationReading snr " +
+                                    "WHERE snr.studentNotification.id IN (" +
+                                    "SELECT n.id FROM StudentNotification n WHERE n.date < :fiveDaysAgo" +
+                                    ")"
+                    )
+                    .setParameter("fiveDaysAgo", fiveDaysAgoTimestamp)
+                    .executeUpdate();
+            logger.info("Deleted {} student notification readings", deletedStudentReadings);
 
             int deletedStudentNotifications = entityManager.createQuery(
                             "DELETE FROM StudentNotification n WHERE n.date < :fiveDaysAgo"
@@ -36,6 +46,16 @@ public class NotificationCleanUpService {
                     .setParameter("fiveDaysAgo", fiveDaysAgoTimestamp)
                     .executeUpdate();
             logger.info("Deleted {} student notifications", deletedStudentNotifications);
+
+            int deletedTeacherReadings = entityManager.createQuery(
+                            "DELETE FROM TeacherNotificationReading tnr " +
+                                    "WHERE tnr.notification.id IN (" +
+                                    "SELECT n.id FROM TeacherNotification n WHERE n.date < :fiveDaysAgo" +
+                                    ")"
+                    )
+                    .setParameter("fiveDaysAgo", fiveDaysAgoTimestamp)
+                    .executeUpdate();
+            logger.info("Deleted {} teacher notification readings", deletedTeacherReadings);
 
             int deletedTeacherNotifications = entityManager.createQuery(
                             "DELETE FROM TeacherNotification n WHERE n.date < :fiveDaysAgo"
